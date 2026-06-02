@@ -60,3 +60,19 @@
     padding-inline: 10px;
   }
 }
+
+/* ── Glass overrides (light mode) ── */
+body.light .advanced-panel {
+  background: rgba(255, 255, 255, 0.55);
+  border-color: rgba(99, 102, 241, 0.12);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+/* ── Glass overrides (dark mode) ── */
+body.dark .advanced-panel {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}

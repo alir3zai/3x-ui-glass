@@ -231,3 +231,39 @@
   opacity: 0.4;
 }
 
+/* ── Glass overrides (light mode) ── */
+body.light .rule-card {
+  background: rgba(255, 255, 255, 0.62);
+  border-color: rgba(99, 102, 241, 0.12);
+  box-shadow: 0 1px 3px rgba(99, 102, 241, 0.06);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+body.light .rule-criteria {
+  border-top-color: rgba(99, 102, 241, 0.10);
+}
+
+body.light .criterion-chip,
+body.light .criterion-more {
+  background: rgba(99, 102, 241, 0.06);
+}
+
+/* ── Glass overrides (dark mode) ── */
+body.dark .rule-card {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+body.dark .rule-criteria {
+  border-top-color: rgba(255, 255, 255, 0.08);
+}
+
+body.dark .criterion-chip,
+body.dark .criterion-more {
+  background: rgba(255, 255, 255, 0.07);
+}
+

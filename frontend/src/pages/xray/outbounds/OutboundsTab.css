@@ -209,3 +209,27 @@
 .outbound-test-popover .dot-fail {
   color: #e04141;
 }
+
+/* ── Glass overrides (light mode) ── */
+body.light .outbound-card {
+  background: rgba(255, 255, 255, 0.60);
+  border-color: rgba(99, 102, 241, 0.12);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+body.light .address-pill {
+  background: rgba(99, 102, 241, 0.06);
+}
+
+/* ── Glass overrides (dark mode) ── */
+body.dark .outbound-card {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+body.dark .address-pill {
+  background: rgba(255, 255, 255, 0.07);
+}

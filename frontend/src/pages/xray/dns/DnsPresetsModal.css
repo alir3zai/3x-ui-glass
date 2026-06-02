@@ -20,3 +20,27 @@
 .preset-name {
   font-weight: 500;
 }
+
+/* ── Glass overrides (light mode) ── */
+body.light .preset-list {
+  border-color: rgba(99, 102, 241, 0.12);
+  background: rgba(255, 255, 255, 0.50);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+body.light .preset-row {
+  border-bottom-color: rgba(99, 102, 241, 0.08);
+}
+
+/* ── Glass overrides (dark mode) ── */
+body.dark .preset-list {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+body.dark .preset-row {
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}

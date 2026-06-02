@@ -4,6 +4,8 @@ import { useQueryClient } from '@tanstack/react-query';
 import { WebSocketClient } from '@/api/websocket';
 import { keys } from '@/api/queryKeys';
 import { isRecentLocalInvalidate } from '@/api/invalidationTracker';
+import { Status } from '@/models/status';
+import type { StatusInput } from '@/schemas/status';
 
 type Handler = (payload: unknown) => void;
 
@@ -29,6 +31,11 @@ export function useWebSocketBridge() {
 
   useEffect(() => {
     const client = getSharedClient();
+
+    const onStatus: Handler = (payload) => {
+      if (!payload || typeof payload !== 'object') return;
+      queryClient.setQueryData(keys.server.status(), new Status(payload as StatusInput));
+    };
 
     const onInvalidate: Handler = (payload) => {
       const p = payload as { type?: string } | undefined;
@@ -59,6 +66,7 @@ export function useWebSocketBridge() {
       queryClient.setQueryData(keys.inbounds.slim(), payload);
     };
 
+    client.on('status', onStatus);
     client.on('invalidate', onInvalidate);
     client.on('outbounds', onOutbounds);
     client.on('nodes', onNodes);
@@ -66,6 +74,7 @@ export function useWebSocketBridge() {
     client.connect();
 
     return () => {
+      client.off('status', onStatus);
       client.off('invalidate', onInvalidate);
       client.off('outbounds', onOutbounds);
       client.off('nodes', onNodes);

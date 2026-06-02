@@ -33,3 +33,8 @@
   flex: 1;
   min-width: 0;
 }
+
+/* ── Glass overrides (dark mode) ── */
+body.dark .warp-data-table .row-odd {
+  background: rgba(255, 255, 255, 0.05);
+}

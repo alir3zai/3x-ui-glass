@@ -52,6 +52,34 @@
   opacity: 0.5;
 }
 
+/* ── Glass overrides (light mode) ── */
+body.light .custom-geo-count {
+  background: rgba(99, 102, 241, 0.06);
+}
+
+body.light .custom-geo-ext-code {
+  background: rgba(99, 102, 241, 0.05);
+  border: 1px solid rgba(99, 102, 241, 0.10);
+}
+
+body.light .custom-geo-copyable:hover {
+  background: rgba(99, 102, 241, 0.10);
+}
+
+/* ── Glass overrides (dark mode) ── */
+body.dark .custom-geo-count {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+body.dark .custom-geo-ext-code {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+body.dark .custom-geo-copyable:hover {
+  background: rgba(255, 255, 255, 0.10);
+}
+
 .custom-geo-empty {
   text-align: center;
   padding: 18px 0;

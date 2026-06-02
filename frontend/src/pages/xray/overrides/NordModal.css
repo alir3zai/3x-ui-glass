@@ -39,3 +39,8 @@
   margin-right: 0;
   flex-shrink: 0;
 }
+
+/* ── Glass overrides (dark mode) ── */
+body.dark .nord-data-table .row-odd {
+  background: rgba(255, 255, 255, 0.05);
+}

@@ -35,3 +35,27 @@
   color: var(--ant-color-text-tertiary);
   line-height: 1.5715;
 }
+
+/* ── Glass overrides (light mode) ── */
+body.light .backup-list {
+  border-color: rgba(99, 102, 241, 0.12);
+  background: rgba(255, 255, 255, 0.50);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+body.light .backup-item {
+  border-bottom-color: rgba(99, 102, 241, 0.08);
+}
+
+/* ── Glass overrides (dark mode) ── */
+body.dark .backup-list {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+body.dark .backup-item {
+  border-bottom-color: rgba(255, 255, 255, 0.06);
+}

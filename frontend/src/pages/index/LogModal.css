@@ -140,6 +140,13 @@
   margin-left: 4px;
 }
 
+body.light .log-container {
+  background: rgba(255, 255, 255, 0.60);
+  border-color: rgba(99, 102, 241, 0.12);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
 body.dark .log-container {
   --log-stamp: #6aa6ee;
   --log-debug: #6aa6ee;
@@ -149,6 +156,10 @@ body.dark .log-container {
   --log-error: #ff7575;
   --log-unknown: #b5b5b5;
   --log-divider: rgba(255, 255, 255, 0.1);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
 }
 
 html[data-theme="ultra-dark"] .log-container {

@@ -142,3 +142,27 @@
   align-items: center;
   gap: 8px;
 }
+
+/* ── Glass overrides (light mode) ── */
+body.light .node-card {
+  background: rgba(255, 255, 255, 0.60);
+  border-color: rgba(99, 102, 241, 0.12);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+body.light .card-history {
+  border-top-color: rgba(99, 102, 241, 0.10);
+}
+
+/* ── Glass overrides (dark mode) ── */
+body.dark .node-card {
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.08);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+body.dark .card-history {
+  border-top-color: rgba(255, 255, 255, 0.07);
+}

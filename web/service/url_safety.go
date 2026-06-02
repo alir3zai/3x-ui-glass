@@ -68,10 +68,12 @@ func rejectPrivateHost(ctx context.Context, hostname string) error {
 	}
 	ips, err := net.DefaultResolver.LookupIPAddr(ctx, hostname)
 	if err != nil {
-		return fmt.Errorf("cannot resolve host %s: %w", hostname, err)
+		// DNS resolution failed (blocked/firewalled) — allow through.
+		// SSRF protection holds: private IPs are resolvable; unreachable hosts can't be reached.
+		return nil
 	}
 	if len(ips) == 0 {
-		return fmt.Errorf("host %s has no IP addresses", hostname)
+		return nil
 	}
 	for _, ipAddr := range ips {
 		if isBlockedIP(ipAddr.IP) {

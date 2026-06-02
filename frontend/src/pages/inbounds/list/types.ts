@@ -1,4 +1,7 @@
 import type { NodeRecord } from '@/api/queries/useNodesQuery';
+import type { SubSettings } from '../useInbounds';
+
+export type { SubSettings };
 
 export interface StreamHints {
   network: string;
@@ -67,6 +70,7 @@ export interface InboundListProps {
   pageSize: number;
   isMobile: boolean;
   subEnable: boolean;
+  subSettings?: SubSettings;
   nodesById: Map<number, NodeRecord>;
   hasActiveNode: boolean;
   onAddInbound: () => void;

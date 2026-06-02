@@ -1,3 +1,29 @@
+/* ── Glassmorphism: full-page gradient on the root body ── */
+html, body {
+  min-height: 100%;
+}
+
+body.dark {
+  background: linear-gradient(160deg, #050508 0%, #080d14 35%, #0a1628 65%, #050508 100%);
+  background-size: cover;
+  min-height: 100vh;
+}
+
+html[data-theme="ultra-dark"] body.dark {
+  background: linear-gradient(160deg, #050508 0%, #080d14 35%, #0a1628 65%, #050508 100%);
+  background-size: cover;
+  min-height: 100vh;
+}
+
+body.light {
+  background:
+    radial-gradient(ellipse at 15% 15%, rgba(99, 102, 241, 0.14) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 75%, rgba(236, 72, 153, 0.10) 0%, transparent 55%),
+    #eef2ff;
+  min-height: 100vh;
+}
+
+/* ── Page shells: transparent so body gradient shows through ── */
 .index-page,
 .clients-page,
 .inbounds-page,
@@ -6,10 +32,10 @@
 .nodes-page,
 .groups-page,
 .api-docs-page {
-  --bg-page: #e6e8ec;
-  --bg-card: #ffffff;
+  --bg-page: transparent;
+  --bg-card: rgba(255, 255, 255, 0.72);
   min-height: 100vh;
-  background: var(--bg-page);
+  background: transparent;
 }
 
 .index-page.is-dark,
@@ -20,8 +46,8 @@
 .nodes-page.is-dark,
 .groups-page.is-dark,
 .api-docs-page.is-dark {
-  --bg-page: #1a1b1f;
-  --bg-card: #23252b;
+  --bg-page: transparent;
+  --bg-card: rgba(255, 255, 255, 0.05);
 }
 
 .index-page.is-dark.is-ultra,
@@ -32,8 +58,8 @@
 .nodes-page.is-dark.is-ultra,
 .groups-page.is-dark.is-ultra,
 .api-docs-page.is-dark.is-ultra {
-  --bg-page: #000;
-  --bg-card: #101013;
+  --bg-page: transparent;
+  --bg-card: rgba(255, 255, 255, 0.03);
 }
 
 .index-page .ant-layout,
@@ -168,4 +194,82 @@ body.dark .ant-dropdown-menu-item-divider {
   .groups-page .summary-card {
     padding: 8px;
   }
+}
+
+/* ── Glass feedback components (light mode) ── */
+body.light .ant-alert-error {
+  background: rgba(255, 77, 79, 0.07);
+  border-color: rgba(255, 77, 79, 0.18);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+body.light .ant-alert-warning {
+  background: rgba(250, 173, 20, 0.08);
+  border-color: rgba(250, 173, 20, 0.20);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+body.light .ant-alert-info {
+  background: rgba(99, 102, 241, 0.08);
+  border-color: rgba(99, 102, 241, 0.22);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+body.light .ant-alert-success {
+  background: rgba(82, 196, 26, 0.07);
+  border-color: rgba(82, 196, 26, 0.18);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+body.light .ant-message-notice-content {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(99, 102, 241, 0.12);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 4px 20px rgba(99, 102, 241, 0.10);
+}
+
+/* ── Glass feedback components (dark mode) ── */
+body.dark .ant-alert-error {
+  background: rgba(255, 77, 79, 0.10);
+  border-color: rgba(255, 77, 79, 0.22);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+body.dark .ant-alert-warning {
+  background: rgba(250, 173, 20, 0.10);
+  border-color: rgba(250, 173, 20, 0.22);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+body.dark .ant-alert-info {
+  background: rgba(99, 102, 241, 0.12);
+  border-color: rgba(99, 102, 241, 0.28);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+body.dark .ant-alert-success {
+  background: rgba(82, 196, 26, 0.10);
+  border-color: rgba(82, 196, 26, 0.22);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+body.dark .ant-message-notice-content {
+  background: rgba(20, 22, 40, 0.90);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.35);
+}
+
+body.dark .ant-result {
+  background: transparent;
 }

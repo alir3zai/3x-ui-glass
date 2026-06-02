@@ -197,3 +197,49 @@
   background: color-mix(in srgb, var(--ant-color-primary) 12%, transparent);
   text-decoration-color: var(--ant-color-primary);
 }
+
+/* ── Glass overrides (light mode) ── */
+body.light .value-code,
+body.light .link-panel-text,
+body.light .link-panel-anchor {
+  background: rgba(99, 102, 241, 0.05);
+  border: 1px solid rgba(99, 102, 241, 0.10);
+}
+
+body.light .link-panel {
+  border-color: rgba(99, 102, 241, 0.12);
+  background: rgba(255, 255, 255, 0.50);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+body.light .info-row {
+  border-bottom-color: rgba(99, 102, 241, 0.08);
+}
+
+body.light .share-buttons {
+  border-inline-start-color: rgba(99, 102, 241, 0.15);
+}
+
+/* ── Glass overrides (dark mode) ── */
+body.dark .value-code,
+body.dark .link-panel-text,
+body.dark .link-panel-anchor {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.07);
+}
+
+body.dark .link-panel {
+  border-color: rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+}
+
+body.dark .info-row {
+  border-bottom-color: rgba(255, 255, 255, 0.07);
+}
+
+body.dark .share-buttons {
+  border-inline-start-color: rgba(255, 255, 255, 0.10);
+}

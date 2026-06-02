@@ -21,6 +21,8 @@ import {
   ReloadOutlined,
   InfoCircleOutlined,
   DeleteOutlined,
+  DownOutlined,
+  UpOutlined,
 } from '@ant-design/icons';
 
 import { HttpUtil } from '@/utils';
@@ -28,18 +30,21 @@ import { HttpUtil } from '@/utils';
 import { buildRowActionsMenu } from './RowActions';
 import { useInboundColumns } from './useInboundColumns';
 import InboundStatsModal from './InboundStatsModal';
+import InboundClientsPanel from './InboundClientsPanel';
 import type { DBInboundRecord, GeneralAction, InboundListProps, RowAction } from './types';
 import './InboundList.css';
 
 export default function InboundList({
   dbInbounds,
   clientCount,
+  onlineClients,
   lastOnlineMap: _lastOnlineMap,
   expireDiff,
   trafficDiff,
   pageSize,
   isMobile,
   subEnable,
+  subSettings,
   nodesById,
   hasActiveNode,
   onAddInbound,
@@ -50,6 +55,11 @@ export default function InboundList({
   const { t } = useTranslation();
   const [statsRecord, setStatsRecord] = useState<DBInboundRecord | null>(null);
   const [selectedRowKeys, setSelectedRowKeys] = useState<number[]>([]);
+  const [expandedRowId, setExpandedRowId] = useState<number | null>(null);
+
+  const toggleExpand = useCallback((id: number) => {
+    setExpandedRowId((prev) => (prev === id ? null : id));
+  }, []);
 
   const onSwitchEnable = useCallback(async (dbInbound: DBInboundRecord, next: boolean) => {
     const previous = dbInbound.enable;
@@ -166,38 +176,57 @@ export default function InboundList({
                   <span className="bulk-count">{selectedRowKeys.length}</span>
                 )}
               </div>
-              {dbInbounds.map((record) => (
-                <div key={record.id} className={`inbound-card${selectedRowKeys.includes(record.id) ? ' is-selected' : ''}`}>
-                  <div className="card-head">
-                    <Checkbox
-                      checked={selectedRowKeys.includes(record.id)}
-                      onChange={(e) => toggleSelect(record.id, e.target.checked)}
-                    />
-                    <span className="card-id">#{record.id}</span>
-                    <span className="tag-name">{record.remark}</span>
-                    <div className="card-actions" onClick={(e) => e.stopPropagation()}>
-                      <Tooltip title={t('pages.inbounds.inboundInfo')}>
-                        <InfoCircleOutlined className="row-action-trigger" onClick={() => setStatsRecord(record)} />
-                      </Tooltip>
-                      <Switch
-                        checked={record.enable}
-                        size="small"
-                        onChange={(next) => onSwitchEnable(record, next)}
+              {dbInbounds.map((record) => {
+                const hasClients = (clientCount[record.id]?.clients ?? 0) > 0;
+                const isExpanded = expandedRowId === record.id;
+                return (
+                  <div key={record.id} className={`inbound-card${selectedRowKeys.includes(record.id) ? ' is-selected' : ''}`}>
+                    <div className="card-head">
+                      <Checkbox
+                        checked={selectedRowKeys.includes(record.id)}
+                        onChange={(e) => toggleSelect(record.id, e.target.checked)}
                       />
-                      <Dropdown
-                        trigger={['click']}
-                        placement="bottomRight"
-                        menu={{
-                          items: buildRowActionsMenu({ record, subEnable, t, isMobile: true, hasClients: (clientCount[record.id]?.clients || 0) > 0 }),
-                          onClick: ({ key }) => onRowAction({ key: key as RowAction, dbInbound: record }),
-                        }}
-                      >
-                        <MoreOutlined className="row-action-trigger" onClick={(e) => e.preventDefault()} />
-                      </Dropdown>
+                      <span className="card-id">#{record.id}</span>
+                      <span className="tag-name">{record.remark}</span>
+                      <div className="card-actions" onClick={(e) => e.stopPropagation()}>
+                        {hasClients && (
+                          <Tooltip title={isExpanded ? 'Collapse' : 'Expand'}>
+                            <button
+                              className={`icp-expand-btn${isExpanded ? ' is-open' : ''}`}
+                              onClick={() => toggleExpand(record.id)}
+                            >
+                              {isExpanded ? <UpOutlined /> : <DownOutlined />}
+                            </button>
+                          </Tooltip>
+                        )}
+                        <Tooltip title={t('pages.inbounds.inboundInfo')}>
+                          <InfoCircleOutlined className="row-action-trigger" onClick={() => setStatsRecord(record)} />
+                        </Tooltip>
+                        <Switch
+                          checked={record.enable}
+                          size="small"
+                          onChange={(next) => onSwitchEnable(record, next)}
+                        />
+                        <Dropdown
+                          trigger={['click']}
+                          placement="bottomRight"
+                          menu={{
+                            items: buildRowActionsMenu({ record, subEnable, t, isMobile: true, hasClients }),
+                            onClick: ({ key }) => onRowAction({ key: key as RowAction, dbInbound: record }),
+                          }}
+                        >
+                          <MoreOutlined className="row-action-trigger" onClick={(e) => e.preventDefault()} />
+                        </Dropdown>
+                      </div>
                     </div>
+                    {isExpanded && hasClients && (
+                      <div className="card-clients-panel">
+                        <InboundClientsPanel inboundId={record.id} onlineClients={onlineClients} subSettings={subSettings} />
+                      </div>
+                    )}
                   </div>
-                </div>
-              ))}
+                );
+              })}
               </>
             )}
           </div>
@@ -209,6 +238,30 @@ export default function InboundList({
             rowSelection={{
               selectedRowKeys,
               onChange: (keys: Key[]) => setSelectedRowKeys(keys as number[]),
+            }}
+            expandable={{
+              expandedRowKeys: expandedRowId != null ? [expandedRowId] : [],
+              onExpand: (expanded, record) => setExpandedRowId(expanded ? record.id : null),
+              rowExpandable: (record) => (clientCount[record.id]?.clients ?? 0) > 0,
+              expandedRowRender: (record) => (
+                <InboundClientsPanel
+                  inboundId={record.id}
+                  onlineClients={onlineClients}
+                  subSettings={subSettings}
+                />
+              ),
+              expandIcon: ({ expanded: exp, onExpand: onExp, record }) => {
+                if ((clientCount[record.id]?.clients ?? 0) === 0) return null;
+                return (
+                  <button
+                    className="icp-expand-btn"
+                    onClick={(e) => { e.stopPropagation(); onExp(record, e); }}
+                    title={exp ? 'Collapse' : 'Expand'}
+                  >
+                    {exp ? <UpOutlined /> : <DownOutlined />}
+                  </button>
+                );
+              },
             }}
             pagination={paginationFor(dbInbounds)}
             scroll={{ x: 1000 }}

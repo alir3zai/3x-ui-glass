@@ -165,7 +165,7 @@
 .card-head .tag-name {
   font-weight: 600;
   flex: 1;
-  min-width: 0;
+  min-width: 50px;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -176,6 +176,21 @@
   align-items: center;
   gap: 10px;
   flex-shrink: 0;
+}
+
+@media (max-width: 480px) {
+  .card-head {
+    gap: 6px;
+  }
+  .card-head .tag-name {
+    min-width: 40px;
+  }
+  .card-actions {
+    gap: 6px;
+  }
+  .row-action-trigger {
+    font-size: 16px;
+  }
 }
 
 .row-action-trigger {
@@ -203,4 +218,34 @@
   padding: 32px 0;
   text-align: center;
   color: var(--ant-color-text-secondary);
+}
+
+/* ── Dark mode: explicit overrides for mobile cards ── */
+body.dark .client-card {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.10);
+  color: rgba(255, 255, 255, 0.88);
+}
+
+body.dark .client-card .tag-name,
+body.dark .client-card .card-head {
+  color: rgba(255, 255, 255, 0.88);
+}
+
+body.dark .client-card.is-selected {
+  background: color-mix(in srgb, var(--ant-color-primary) 10%, transparent);
+  border-color: rgba(99, 102, 241, 0.35);
+}
+
+@supports (-webkit-touch-callout: none) {
+  body.dark .client-card {
+    background: rgba(20, 22, 40, 0.95) !important;
+    color: rgba(255,255,255,0.88) !important;
+    -webkit-text-fill-color: rgba(255,255,255,0.88) !important;
+  }
+  body.dark .client-card .tag-name,
+  body.dark .client-card .card-head {
+    color: rgba(255,255,255,0.88) !important;
+    -webkit-text-fill-color: rgba(255,255,255,0.88) !important;
+  }
 }

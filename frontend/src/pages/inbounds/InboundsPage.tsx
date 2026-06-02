@@ -610,6 +610,7 @@ export default function InboundsPage() {
                       pageSize={pageSize}
                       isMobile={isMobile}
                       subEnable={subSettings.enable}
+                      subSettings={subSettings}
                       nodesById={nodesById}
                       hasActiveNode={showNodeInfo}
                       onAddInbound={onAddInbound}

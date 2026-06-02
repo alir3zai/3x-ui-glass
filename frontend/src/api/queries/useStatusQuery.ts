@@ -7,7 +7,8 @@ import { Status } from '@/models/status';
 import { StatusSchema } from '@/schemas/status';
 import { keys } from '@/api/queryKeys';
 
-const POLL_INTERVAL_MS = 2000;
+// 30s fallback poll — real-time updates arrive via WebSocket (server pushes every 2s)
+const POLL_INTERVAL_MS = 30_000;
 
 async function fetchStatus(): Promise<Status> {
   const msg = await HttpUtil.get('/panel/api/server/status', undefined, { silent: true });
@@ -22,7 +23,7 @@ export function useStatusQuery() {
     queryFn: fetchStatus,
     refetchInterval: POLL_INTERVAL_MS,
     refetchIntervalInBackground: false,
-    staleTime: 0,
+    staleTime: 2000,
   });
 
   const status = useMemo(() => query.data ?? new Status(), [query.data]);

@@ -1,3 +1,4 @@
+/* ── Light cards: frosted glass ── */
 .index-page .ant-card,
 .clients-page .ant-card,
 .inbounds-page .ant-card,
@@ -6,11 +7,18 @@
 .nodes-page .ant-card,
 .groups-page .ant-card,
 .api-docs-page .ant-card {
-  border-radius: 12px;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.68);
+  border: 1px solid rgba(255, 255, 255, 0.60);
+  box-shadow:
+    0 2px 8px rgba(99, 102, 241, 0.08),
+    0 1px 2px rgba(0, 0, 0, 0.04);
+  -webkit-backdrop-filter: blur(12px) saturate(160%);
+  backdrop-filter: blur(12px) saturate(160%);
   transition: transform 0.2s ease, box-shadow 0.25s ease, border-color 0.2s ease;
 }
 
+/* ── Dark cards: deep glass ── */
 .index-page.is-dark .ant-card,
 .clients-page.is-dark .ant-card,
 .inbounds-page.is-dark .ant-card,
@@ -19,11 +27,16 @@
 .nodes-page.is-dark .ant-card,
 .groups-page.is-dark .ant-card,
 .api-docs-page.is-dark .ant-card {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
   box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    0 4px 16px rgba(0, 0, 0, 0.35),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  backdrop-filter: blur(14px) saturate(160%);
 }
 
+/* ── Ultra-dark cards: minimal glass ── */
 .index-page.is-dark.is-ultra .ant-card,
 .clients-page.is-dark.is-ultra .ant-card,
 .inbounds-page.is-dark.is-ultra .ant-card,
@@ -32,11 +45,16 @@
 .nodes-page.is-dark.is-ultra .ant-card,
 .groups-page.is-dark.is-ultra .ant-card,
 .api-docs-page.is-dark.is-ultra .ant-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.05);
   box-shadow:
-    0 1px 2px rgba(0, 0, 0, 0.6),
-    inset 0 1px 0 rgba(255, 255, 255, 0.025);
+    0 4px 16px rgba(0, 0, 0, 0.55),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  backdrop-filter: blur(14px) saturate(140%);
 }
 
+/* ── Hover light: indigo glow ── */
 .index-page .ant-card.ant-card-hoverable:hover,
 .clients-page .ant-card.ant-card-hoverable:hover,
 .inbounds-page .ant-card.ant-card-hoverable:hover,
@@ -45,9 +63,14 @@
 .nodes-page .ant-card.ant-card-hoverable:hover,
 .groups-page .ant-card.ant-card-hoverable:hover,
 .api-docs-page .ant-card.ant-card-hoverable:hover {
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+  box-shadow:
+    0 8px 24px rgba(99, 102, 241, 0.18),
+    0 2px 4px rgba(0, 0, 0, 0.06);
+  border-color: rgba(99, 102, 241, 0.30);
 }
 
+/* ── Hover dark: indigo glow on glass ── */
 .index-page.is-dark .ant-card.ant-card-hoverable:hover,
 .clients-page.is-dark .ant-card.ant-card-hoverable:hover,
 .inbounds-page.is-dark .ant-card.ant-card-hoverable:hover,
@@ -56,11 +79,15 @@
 .nodes-page.is-dark .ant-card.ant-card-hoverable:hover,
 .groups-page.is-dark .ant-card.ant-card-hoverable:hover,
 .api-docs-page.is-dark .ant-card.ant-card-hoverable:hover {
+  transform: translateY(-1px);
   box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 255, 255, 0.04);
+    0 8px 32px rgba(99, 102, 241, 0.25),
+    0 4px 16px rgba(0, 0, 0, 0.40),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  border-color: rgba(99, 102, 241, 0.30);
 }
 
+/* ── Hover ultra-dark: soft violet glow ── */
 .index-page.is-dark.is-ultra .ant-card.ant-card-hoverable:hover,
 .clients-page.is-dark.is-ultra .ant-card.ant-card-hoverable:hover,
 .inbounds-page.is-dark.is-ultra .ant-card.ant-card-hoverable:hover,
@@ -69,11 +96,15 @@
 .nodes-page.is-dark.is-ultra .ant-card.ant-card-hoverable:hover,
 .groups-page.is-dark.is-ultra .ant-card.ant-card-hoverable:hover,
 .api-docs-page.is-dark.is-ultra .ant-card.ant-card-hoverable:hover {
+  transform: translateY(-1px);
   box-shadow:
-    0 8px 24px rgba(0, 0, 0, 0.75),
-    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    0 8px 32px rgba(129, 140, 248, 0.20),
+    0 4px 16px rgba(0, 0, 0, 0.60),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  border-color: rgba(129, 140, 248, 0.25);
 }
 
+/* ── Card actions always transparent ── */
 .index-page .ant-card .ant-card-actions,
 .clients-page .ant-card .ant-card-actions,
 .inbounds-page .ant-card .ant-card-actions,
