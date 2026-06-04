@@ -15,14 +15,14 @@ A customized 3X-UI panel with Glassmorphism UI theme.
 Download the latest release and transfer to your server:
 
 ```bash
-wget https://github.com/alir3zai/3x-ui-glass/releases/download/v3.2/3x-ui-glass.tar.gz
+wget https://github.com/alir3zai/3x-ui-glass/releases/download/v3.4/3x-ui-glass.tar.gz
 tar xzf 3x-ui-glass.tar.gz
 cd 3x-ui-glass
 bash install.sh
 ```
 
 ## Latest Release
-[v3.2](https://github.com/alir3zai/3x-ui-glass/releases/tag/v3.2)
+[v3.4](https://github.com/alir3zai/3x-ui-glass/releases/tag/v3.4)
 
 ## Default credentials
 - Username: admin
