@@ -1,0 +1,517 @@
+#!/bin/bash
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+PURPLE='\033[0;35m'
+CYAN='\033[0;36m'
+ORANGE='\033[38;5;208m'
+BOLD='\033[1m'
+PLAIN='\033[0m'
+
+show_dragon() {
+    clear
+    echo -e "${CYAN}                              ==(W{==========-      /===-${PLAIN}"
+    echo -e "${CYAN}                              ||  (.--.)         /===-_---~~~~~~~~~------____${PLAIN}"
+    echo -e "${CYAN}                              | \\_,|**|,__      |===-~___                _,-'${PLAIN}"
+    echo -e "${RED}                 -==\\\\${CYAN}        \`\\ ' \`--'   ),    \`//~\\\\   ~~~~\`---.___.-~~${PLAIN}"
+    echo -e "${PURPLE}             ______-==|${CYAN}        /\`\\_. .__/\\ \\    | |  \\\\           _-~\`${PLAIN}"
+    echo -e "${PURPLE}       __--~~~  ,-/-==\\\\${CYAN}      (   | .  |~~~~|   | |   \`\\        ,'${PLAIN}"
+    echo -e "${PURPLE}    _-~       /'    |  \\\\${CYAN}     )__/==0==-\\<>/   / /      \\      /${PLAIN}"
+    echo -e "${CYAN}  .'        /       |   \\\\      /~\\___/~~\\/  /' /        \\   /'${PLAIN}"
+    echo -e "${CYAN} /  ____  /         |    \`\`\`.__/-~~   \\  |_/'  /          \\/'${PLAIN}"
+    echo -e "${RED}/-'~    ~~~~~---__${CYAN}  |     ~-/~         ( )   /'        _--~\`${PLAIN}"
+    echo -e "${CYAN}                  \\_|      /        _) | ;  ),   __--~~${PLAIN}"
+    echo -e "${CYAN}                    '~~--_/      _-~/- |/ \\   '-~ \\${PLAIN}"
+    echo -e "${PURPLE}                   {\\__--_/}    / \\\\_>-|)<__\\      \\${PLAIN}"
+    echo -e "${PURPLE}                   /'   (_/  _-~  | |__>--<__|      |${PLAIN}"
+    echo -e "${CYAN}                  |   _/) )-~     | |__>--<__|      |${PLAIN}"
+    echo -e "${CYAN}                  / /~ ,_/       / /__>---<__/      |${PLAIN}"
+    echo -e "${ORANGE}                 o-o _//        /-~_>---<__-~      /${PLAIN}"
+    echo -e "${ORANGE}                 (^(~          /~_>---<__-      _-~${PLAIN}"
+    echo -e "${YELLOW}                ,/|           /__>--<__/     _-~${PLAIN}"
+    echo -e "${YELLOW}             ,//('(          |__>--<__|     /                     .----_${PLAIN}"
+    echo -e "${YELLOW}            ( ( '))          |__>--<__|    |                 /' _---_~\\${PLAIN}"
+    echo -e "${CYAN}         \`-)) )) (           |__>--<__|    |               /'  /     ~\`\\${PLAIN}"
+    echo -e "${CYAN}        ,/,'//( (             \\__>--<__\\    \\            /'  //        ||${PLAIN}"
+    echo -e "${PURPLE}      ,( ( ((, ))              ~-__>--<_~-_  ~--____---~' _/'/        /'${PLAIN}"
+    echo -e "${PURPLE}    \`~/  )\` ) ,/|                 ~-_~>--<_/-__       __-~ _/${PLAIN}"
+    echo -e "${RED}  ._-~//( )/ )) \`                    ~~-'_/_/ /~~~~~~~__--~${PLAIN}"
+    echo -e "${RED}   ;'( ')/ ,)(                              ~~~~~~~~~~${PLAIN}"
+    echo -e "${RED}  ' ') '( (/                                                                   ${PLAIN}"
+    echo -e "${ORANGE}    '   '  \`${PLAIN}"
+}
+
+fire_animation() {
+    local frames=(
+        "                 🔥💨                    💨🔥"
+        "              🔥🔥💨                  💨🔥🔥"
+        "           🔥💥✨                        ✨💥🔥"
+        "        ✨  ·  ·                            ·  ·  ✨"
+        "                                                    "
+    )
+    for frame in "${frames[@]}"; do
+        echo -e "${RED}${frame}${PLAIN}"
+        sleep 0.15
+    done
+}
+
+confirm() {
+    local msg="${1:-Are you sure?}"
+    echo -e "${YELLOW}⚠️  ${msg} (y/n): ${PLAIN}\c"
+    read -r ans
+    [[ "$ans" == "y" || "$ans" == "Y" ]]
+}
+
+ask_restart() {
+    echo -e ""
+    echo -e "${CYAN}🔄 Restart x-ui and xray now? (y/n): ${PLAIN}\c"
+    read -r ans
+    if [[ "$ans" == "y" || "$ans" == "Y" ]]; then
+        systemctl restart x-ui
+        echo -e "${GREEN}✅ x-ui restarted.${PLAIN}"
+    fi
+}
+
+check_status() {
+    if systemctl is-active --quiet x-ui 2>/dev/null; then
+        PANEL_STATE="${GREEN}Running${PLAIN}"
+    else
+        PANEL_STATE="${RED}Stopped${PLAIN}"
+    fi
+
+    if systemctl is-enabled --quiet x-ui 2>/dev/null; then
+        AUTO_START="${GREEN}Yes${PLAIN}"
+    else
+        AUTO_START="${RED}No${PLAIN}"
+    fi
+
+    if pgrep -x "xray" > /dev/null 2>&1 || pgrep -f "xray-linux" > /dev/null 2>&1; then
+        XRAY_STATE="${GREEN}Running${PLAIN}"
+    else
+        XRAY_STATE="${RED}Stopped${PLAIN}"
+    fi
+}
+
+show_menu() {
+    check_status
+    show_dragon
+    echo -e "${PURPLE}╔────────────────────────────────────────────────╗${PLAIN}"
+    echo -e "${PURPLE}│${PLAIN}   ${CYAN}${BOLD}3X-UI Glass Panel${PLAIN}                            ${PURPLE}│${PLAIN}"
+    echo -e "${PURPLE}│${PLAIN}   0. Exit Script                               ${PURPLE}│${PLAIN}"
+    echo -e "${PURPLE}│────────────────────────────────────────────────│${PLAIN}"
+    echo -e "${PURPLE}│${PLAIN}   ${RED}1. Reset Username & Password${PLAIN}                 ${PURPLE}│${PLAIN}"
+    echo -e "${PURPLE}│${PLAIN}   ${RED}2. Reset Web Base Path${PLAIN}                       ${PURPLE}│${PLAIN}"
+    echo -e "${PURPLE}│${PLAIN}   ${RED}3. Reset Port${PLAIN}                                ${PURPLE}│${PLAIN}"
+    echo -e "${PURPLE}│${PLAIN}   ${RED}4. Reset All Settings (data kept)${PLAIN}            ${PURPLE}│${PLAIN}"
+    echo -e "${PURPLE}│${PLAIN}   ${RED}5. View Current Settings${PLAIN}                     ${PURPLE}│${PLAIN}"
+    echo -e "${PURPLE}│────────────────────────────────────────────────│${PLAIN}"
+    echo -e "${PURPLE}│${PLAIN}   ${CYAN}6. Panel Info${PLAIN}                                ${PURPLE}│${PLAIN}"
+    echo -e "${PURPLE}│────────────────────────────────────────────────│${PLAIN}"
+    echo -e "${PURPLE}│${PLAIN}   ${YELLOW}7. Start${PLAIN}                                     ${PURPLE}│${PLAIN}"
+    echo -e "${PURPLE}│${PLAIN}   ${YELLOW}8. Stop${PLAIN}                                      ${PURPLE}│${PLAIN}"
+    echo -e "${PURPLE}│${PLAIN}   ${YELLOW}9. Restart${PLAIN}                                   ${PURPLE}│${PLAIN}"
+    echo -e "${PURPLE}│${PLAIN}  ${YELLOW}10. Restart Xray${PLAIN}                              ${PURPLE}│${PLAIN}"
+    echo -e "${PURPLE}│${PLAIN}  ${YELLOW}11. Check Status${PLAIN}                              ${PURPLE}│${PLAIN}"
+    echo -e "${PURPLE}│${PLAIN}  ${YELLOW}12. View Logs${PLAIN}                                 ${PURPLE}│${PLAIN}"
+    echo -e "${PURPLE}│────────────────────────────────────────────────│${PLAIN}"
+    echo -e "${PURPLE}│${PLAIN}  ${GREEN}13. Enable Autostart${PLAIN}                          ${PURPLE}│${PLAIN}"
+    echo -e "${PURPLE}│${PLAIN}  ${GREEN}14. Disable Autostart${PLAIN}                         ${PURPLE}│${PLAIN}"
+    echo -e "${PURPLE}│────────────────────────────────────────────────│${PLAIN}"
+    echo -e "${PURPLE}│${PLAIN}  ${GREEN}15. SSL Certificate (Let's Encrypt)${PLAIN}           ${PURPLE}│${PLAIN}"
+    echo -e "${PURPLE}│${PLAIN}  ${ORANGE}16. Enable IP Limit Enforcement${PLAIN}               ${PURPLE}│${PLAIN}"
+    echo -e "${PURPLE}│${PLAIN}  ${ORANGE}17. Disable IP Limit Enforcement${PLAIN}              ${PURPLE}│${PLAIN}"
+    echo -e "${PURPLE}│${PLAIN}  ${ORANGE}18. Enable BBR${PLAIN}                                ${PURPLE}│${PLAIN}"
+    echo -e "${PURPLE}│${PLAIN}   0. Exit                                      ${PURPLE}│${PLAIN}"
+    echo -e "${PURPLE}╚────────────────────────────────────────────────╝${PLAIN}"
+    echo -e ""
+    echo -e "  Panel state:         $(echo -e ${PANEL_STATE})"
+    echo -e "  Start automatically: $(echo -e ${AUTO_START})"
+    echo -e "  xray state:          $(echo -e ${XRAY_STATE})"
+    echo -e ""
+}
+
+do_panel_info() {
+    local ip port base_path url
+    ip=$(hostname -I | awk '{print $1}')
+    port=$(/usr/local/x-ui/x-ui setting -show 2>/dev/null | grep -oP '(?<=port: )\d+' | head -1)
+    port="${port:-2053}"
+    base_path=$(/usr/local/x-ui/x-ui setting -show 2>/dev/null | grep -oP '(?<=webBasePath: )\S+' | head -1)
+    base_path="${base_path:-/panel}"
+    [[ "$base_path" == /* ]] || base_path="/${base_path}"
+    url="http://${ip}:${port}${base_path}"
+
+    echo ""
+    echo -e "${CYAN}╔══════════════════════════════════╗${PLAIN}"
+    echo -e "${CYAN}║${PLAIN}      ${BOLD}Panel Information${PLAIN}           ${CYAN}║${PLAIN}"
+    echo -e "${CYAN}╠══════════════════════════════════╣${PLAIN}"
+    echo -e "${CYAN}║${PLAIN} Protocol : HTTP                  ${CYAN}║${PLAIN}"
+    echo -e "${CYAN}║${PLAIN} Address  : ${GREEN}${ip}${PLAIN}"
+    echo -e "${CYAN}║${PLAIN} Port     : ${YELLOW}${port}${PLAIN}"
+    echo -e "${CYAN}║${PLAIN} Base Path: ${YELLOW}${base_path}${PLAIN}"
+    echo -e "${CYAN}╠══════════════════════════════════╣${PLAIN}"
+    echo -e "${CYAN}║${PLAIN} URL: ${GREEN}${url}${PLAIN}"
+    echo -e "${CYAN}╚══════════════════════════════════╝${PLAIN}"
+    echo ""
+    read -rp "Press Enter to continue..."
+}
+
+do_ssl() {
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
+    echo -e "${BOLD}  SSL Certificate — Let's Encrypt${PLAIN}"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
+    echo -e "${YELLOW}⚠️  Port 80 must be free (x-ui will be stopped temporarily).${PLAIN}"
+    echo -e ""
+    read -rp "Enter your domain (e.g. panel.example.com): " ssl_domain
+    if [[ -z "$ssl_domain" ]]; then
+        echo -e "${RED}No domain entered. Cancelled.${PLAIN}"
+        read -rp "Press Enter to continue..."
+        return
+    fi
+
+    if ! command -v certbot &>/dev/null; then
+        echo -e "${YELLOW}Installing certbot...${PLAIN}"
+        if command -v apt-get &>/dev/null; then
+            apt-get update -qq && apt-get install -y certbot
+        elif command -v dnf &>/dev/null; then
+            dnf install -y certbot
+        elif command -v yum &>/dev/null; then
+            yum install -y certbot
+        else
+            echo -e "${RED}Cannot install certbot automatically. Please install it manually.${PLAIN}"
+            read -rp "Press Enter to continue..."
+            return
+        fi
+    fi
+
+    echo -e "${YELLOW}Stopping x-ui to free port 80...${PLAIN}"
+    systemctl stop x-ui
+
+    echo -e "${YELLOW}Requesting SSL certificate for ${ssl_domain}...${PLAIN}"
+    certbot certonly --standalone -d "${ssl_domain}" --non-interactive --agree-tos --register-unsafely-without-email
+
+    local cert_exit=$?
+    systemctl start x-ui
+
+    if [[ $cert_exit -ne 0 ]]; then
+        echo -e "${RED}❌ SSL certificate request failed.${PLAIN}"
+        echo -e "${YELLOW}Tip: Make sure the domain DNS points to this server's IP.${PLAIN}"
+        read -rp "Press Enter to continue..."
+        return
+    fi
+
+    local cert_path="/etc/letsencrypt/live/${ssl_domain}/fullchain.pem"
+    local key_path="/etc/letsencrypt/live/${ssl_domain}/privkey.pem"
+
+    echo -e ""
+    echo -e "${GREEN}✅ Certificate issued:${PLAIN}"
+    echo -e "  ${CYAN}Cert:${PLAIN} ${cert_path}"
+    echo -e "  ${CYAN}Key: ${PLAIN} ${key_path}"
+    echo -e ""
+
+    if confirm "Apply this SSL certificate to the x-ui panel?"; then
+        /usr/local/x-ui/x-ui cert -webCert "${cert_path}" -webCertKey "${key_path}"
+        echo -e "${GREEN}✅ SSL applied to x-ui.${PLAIN}"
+        ask_restart
+    fi
+    read -rp "Press Enter to continue..."
+}
+
+do_enable_ip_limit() {
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
+    echo -e "${BOLD}  Enable IP Limit Enforcement${PLAIN}"
+    echo -e "${CYAN}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
+
+    local port base_url
+    port=$(/usr/local/x-ui/x-ui setting -show 2>/dev/null | grep -oP '(?<=port: )\d+' | head -1)
+    port="${port:-2053}"
+    base_url="http://127.0.0.1:${port}"
+
+    read -rp "Panel admin username: " panel_user
+    read -rsp "Panel admin password: " panel_pass
+    echo ""
+
+    # Step 1: fetch CSRF token and establish session cookie
+    local csrf_resp csrf_token
+    csrf_resp=$(curl -s -c /tmp/xui_sess.txt "${base_url}/csrf-token" 2>/dev/null)
+    csrf_token=$(echo "${csrf_resp}" | grep -oP '(?<="obj":")[^"]+')
+
+    if [[ -z "$csrf_token" ]]; then
+        echo -e "${RED}❌ Failed to get CSRF token. Is x-ui running?${PLAIN}"
+        rm -f /tmp/xui_sess.txt
+        read -rp "Press Enter to continue..."
+        return
+    fi
+
+    # Step 2: login with CSRF token header
+    local login_resp
+    login_resp=$(curl -s -b /tmp/xui_sess.txt -c /tmp/xui_sess.txt -X POST "${base_url}/login" \
+        -H "Content-Type: application/json" \
+        -H "X-CSRF-Token: ${csrf_token}" \
+        -d "{\"username\":\"${panel_user}\",\"password\":\"${panel_pass}\"}" 2>/dev/null)
+
+    if ! echo "${login_resp}" | grep -q '"success":true'; then
+        echo -e "${RED}❌ Login failed. Check credentials.${PLAIN}"
+        rm -f /tmp/xui_sess.txt
+        read -rp "Press Enter to continue..."
+        return
+    fi
+
+    # Step 3: create API token (session cookie + CSRF token required)
+    local token_resp api_token
+    token_resp=$(curl -s -b /tmp/xui_sess.txt -X POST "${base_url}/panel/setting/apiTokens/create" \
+        -H "Content-Type: application/json" \
+        -H "X-CSRF-Token: ${csrf_token}" \
+        -d '{"name":"ip-limiter"}' 2>/dev/null)
+    api_token=$(echo "${token_resp}" | grep -oP '(?<="token":")[^"]+')
+
+    if [[ -z "$api_token" ]]; then
+        echo -e "${YELLOW}⚠️  Auto token creation failed. Enter token manually (create from panel > API Tokens):${PLAIN}"
+        read -rp "API token: " api_token
+    fi
+
+    if [[ -z "$api_token" ]]; then
+        echo -e "${RED}❌ No token provided. Cancelled.${PLAIN}"
+        rm -f /tmp/xui_sess.txt
+        read -rp "Press Enter to continue..."
+        return
+    fi
+
+    mkdir -p /usr/local/x-ui /var/log/x-ui
+    printf 'BASE_URL=%s\nAPI_TOKEN=%s\n' "${base_url}" "${api_token}" > /usr/local/x-ui/ip_limiter.conf
+
+    local script_dir
+    script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+    if [[ -f "${script_dir}/ip_limiter.py" ]]; then
+        cp -f "${script_dir}/ip_limiter.py" /usr/local/x-ui/ip_limiter.py
+        chmod +x /usr/local/x-ui/ip_limiter.py
+    elif [[ ! -f /usr/local/x-ui/ip_limiter.py ]]; then
+        echo -e "${RED}❌ ip_limiter.py not found in package.${PLAIN}"
+        rm -f /tmp/xui_sess.txt
+        read -rp "Press Enter to continue..."
+        return
+    fi
+
+    cat > /etc/systemd/system/ip-limiter.service << 'SVCEOF'
+[Unit]
+Description=X-UI IP Limiter
+After=network.target x-ui.service
+Wants=x-ui.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /usr/local/x-ui/ip_limiter.py
+Restart=always
+RestartSec=10s
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+SVCEOF
+
+    systemctl daemon-reload
+    systemctl enable ip-limiter
+    systemctl restart ip-limiter
+    sleep 2
+
+    if systemctl is-active --quiet ip-limiter; then
+        echo -e "${GREEN}✅ IP Limit Enforcement enabled and running.${PLAIN}"
+        echo -e "   Config: ${CYAN}/usr/local/x-ui/ip_limiter.conf${PLAIN}"
+        echo -e "   Logs:   ${CYAN}/var/log/x-ui/ip_limiter.log${PLAIN}"
+    else
+        echo -e "${RED}❌ Service failed to start. Check: journalctl -u ip-limiter -n 20${PLAIN}"
+    fi
+
+    echo -e "${YELLOW}⚙️  Enabling access log in Xray config...${PLAIN}"
+    local xray_raw new_setting
+    xray_raw=$(curl -s -b /tmp/xui_sess.txt -X POST "${base_url}/panel/xray/" \
+        -H "X-CSRF-Token: ${csrf_token}" 2>/dev/null)
+    new_setting=$(echo "${xray_raw}" | python3 -c "
+import sys, json
+try:
+    resp = json.load(sys.stdin)
+    obj = resp.get('obj', '')
+    if isinstance(obj, str):
+        obj = json.loads(obj)
+    raw = obj.get('xraySetting', {})
+    cfg = json.loads(raw) if isinstance(raw, str) else raw
+    log = cfg.get('log', {})
+    if not isinstance(log, dict):
+        log = {}
+    access = log.get('access', '')
+    if access and access not in ('', 'none'):
+        sys.exit(0)  # already enabled
+    log['access'] = '/var/log/x-ui/access.log'
+    cfg['log'] = log
+    print(json.dumps(cfg))
+except Exception:
+    pass
+" 2>/dev/null)
+
+    if [[ -n "${new_setting}" ]]; then
+        printf '%s' "${new_setting}" | curl -s -b /tmp/xui_sess.txt -X POST \
+            "${base_url}/panel/xray/update" \
+            -H "X-CSRF-Token: ${csrf_token}" \
+            --data-urlencode "xraySetting@-" > /dev/null 2>&1
+        curl -s -b /tmp/xui_sess.txt -X POST \
+            "${base_url}/panel/api/server/restartXrayService" \
+            -H "Content-Type: application/json" \
+            -H "X-CSRF-Token: ${csrf_token}" > /dev/null 2>&1
+        echo -e "${GREEN}✅ Access log enabled, Xray restarted.${PLAIN}"
+    else
+        echo -e "${YELLOW}ℹ️  Access log already enabled or could not be configured automatically.${PLAIN}"
+    fi
+
+    rm -f /tmp/xui_sess.txt
+    read -rp "Press Enter to continue..."
+}
+
+do_disable_ip_limit() {
+    if confirm "Stop and disable IP Limit Enforcement?"; then
+        systemctl stop ip-limiter 2>/dev/null || true
+        systemctl disable ip-limiter 2>/dev/null || true
+        echo -e "${GREEN}✅ IP Limit Enforcement disabled.${PLAIN}"
+    else
+        echo -e "${YELLOW}Cancelled.${PLAIN}"
+    fi
+    read -rp "Press Enter to continue..."
+}
+
+do_enable_bbr() {
+    echo -e "${ORANGE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
+    echo -e "${BOLD}  Enable BBR${PLAIN}"
+    echo -e "${ORANGE}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${PLAIN}"
+
+    local current_cc
+    current_cc=$(sysctl net.ipv4.tcp_congestion_control 2>/dev/null | awk '{print $3}')
+
+    if [[ "$current_cc" == "bbr" ]]; then
+        echo -e "${GREEN}✅ BBR already enabled${PLAIN}"
+    else
+        echo -e "${YELLOW}Current: ${current_cc}. Enabling BBR...${PLAIN}"
+        echo net.core.default_qdisc=fq >> /etc/sysctl.conf
+        echo net.ipv4.tcp_congestion_control=bbr >> /etc/sysctl.conf
+        sysctl -p
+        echo -e "${GREEN}✅ BBR enabled successfully${PLAIN}"
+    fi
+    read -rp "Press Enter to continue..."
+}
+
+while true; do
+    show_menu
+    read -rp "Enter your choice [0-18]: " choice
+    case "$choice" in
+        0)
+            echo -e "${GREEN}Exiting...${PLAIN}"
+            exit 0
+            ;;
+        1)
+            echo -e ""
+            read -rp "Enter new username: " new_username
+            read -rsp "Enter new password: " new_password
+            echo ""
+            if confirm "Change username and password?"; then
+                /usr/local/x-ui/x-ui setting -username "${new_username}" -password "${new_password}"
+                echo -e "${GREEN}✅ Username and password updated.${PLAIN}"
+                ask_restart
+            else
+                echo -e "${YELLOW}Cancelled.${PLAIN}"
+            fi
+            read -rp "Press Enter to continue..."
+            ;;
+        2)
+            read -rp "Enter new web base path (e.g., /panel): " new_basepath
+            /usr/local/x-ui/x-ui setting -webBasePath "${new_basepath}"
+            echo -e "${GREEN}✅ Web base path updated.${PLAIN}"
+            ask_restart
+            read -rp "Press Enter to continue..."
+            ;;
+        3)
+            echo -e ""
+            echo -e "${CYAN}📌 Recommended port ranges:${PLAIN}"
+            echo -e "   ${GREEN}1024  – 8999  :${PLAIN} General / safe"
+            echo -e "   ${GREEN}9000  – 9999  :${PLAIN} Common for panels"
+            echo -e "   ${GREEN}10000 – 59999 :${PLAIN} Recommended"
+            echo -e "   ${RED}Avoid: 80, 443, 22, 3306, 5432, 6379${PLAIN}"
+            echo -e ""
+            read -rp "Enter new port: " new_port
+            /usr/local/x-ui/x-ui setting -port "${new_port}"
+            echo -e "${GREEN}✅ Port updated to ${new_port}.${PLAIN}"
+            ask_restart
+            read -rp "Press Enter to continue..."
+            ;;
+        4)
+            if confirm "Reset ALL settings? (data will be kept)"; then
+                /usr/local/x-ui/x-ui setting -reset
+                echo -e "${GREEN}✅ All settings reset (data kept).${PLAIN}"
+                ask_restart
+            else
+                echo -e "${YELLOW}Cancelled.${PLAIN}"
+            fi
+            read -rp "Press Enter to continue..."
+            ;;
+        5)
+            /usr/local/x-ui/x-ui setting -show
+            read -rp "Press Enter to continue..."
+            ;;
+        6)
+            do_panel_info
+            ;;
+        7)
+            systemctl start x-ui
+            echo -e "${GREEN}✅ x-ui started.${PLAIN}"
+            read -rp "Press Enter to continue..."
+            ;;
+        8)
+            systemctl stop x-ui
+            echo -e "${GREEN}✅ x-ui stopped.${PLAIN}"
+            read -rp "Press Enter to continue..."
+            ;;
+        9)
+            systemctl restart x-ui
+            echo -e "${GREEN}✅ x-ui restarted.${PLAIN}"
+            read -rp "Press Enter to continue..."
+            ;;
+        10)
+            systemctl restart x-ui
+            echo -e "${GREEN}✅ Xray restarted.${PLAIN}"
+            read -rp "Press Enter to continue..."
+            ;;
+        11)
+            systemctl status x-ui
+            read -rp "Press Enter to continue..."
+            ;;
+        12)
+            journalctl -u x-ui -n 50 --no-pager
+            read -rp "Press Enter to continue..."
+            ;;
+        13)
+            systemctl enable x-ui
+            echo -e "${GREEN}✅ Autostart enabled.${PLAIN}"
+            read -rp "Press Enter to continue..."
+            ;;
+        14)
+            systemctl disable x-ui
+            echo -e "${GREEN}✅ Autostart disabled.${PLAIN}"
+            read -rp "Press Enter to continue..."
+            ;;
+        15)
+            do_ssl
+            ;;
+        16)
+            do_enable_ip_limit
+            ;;
+        17)
+            do_disable_ip_limit
+            ;;
+        18)
+            do_enable_bbr
+            ;;
+        *)
+            echo -e "${RED}Invalid choice. Please enter a number between 0 and 18.${PLAIN}"
+            read -rp "Press Enter to continue..."
+            ;;
+    esac
+done
