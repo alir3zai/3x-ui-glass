@@ -1,6 +1,6 @@
 #!/bin/bash
 # Version: v3.1
-# Release: https://github.com/alir3zai/3x-ui-glass/releases/tag/v3.1
+# Release: https://github.com/alir3zai/3x-ui-glass/releases/tag/v2.1
 set -e
 
 RED='\033[0;31m'
