@@ -78,8 +78,9 @@ get_server_ip() {
 
 install_deps() {
     info "Installing dependencies..."
-    $PKG_UPDATE >/dev/null 2>&1 || true
-    $PKG_INSTALL curl wget tar unzip ca-certificates >/dev/null 2>&1 || true
+    export DEBIAN_FRONTEND=noninteractive
+    timeout 60 $PKG_UPDATE >/dev/null 2>&1 || true
+    timeout 120 $PKG_INSTALL curl wget tar unzip ca-certificates >/dev/null 2>&1 || true
     success "Dependencies ready."
 }
 
