@@ -17,11 +17,8 @@
 ## 📦 Installation
 
 ```bash
-# Download latest release
-wget https://github.com/alir3zai/3x-ui-glass/releases/download/v4.1/3x-ui-glass.tar.gz
-
-# Extract and install
-tar xzf 3x-ui-glass.tar.gz
+wget https://github.com/alir3zai/3x-ui-glass/releases/download/v4.2/3x-ui-glass-amd64.tar.gz
+tar xzf 3x-ui-glass-amd64.tar.gz
 cd 3x-ui-glass
 bash install.sh
 ```
@@ -96,8 +93,8 @@ tail -f /var/log/x-ui/ip_limiter.log
 
 ### نصب
 ```bash
-wget https://github.com/alir3zai/3x-ui-glass/releases/download/v4.1/3x-ui-glass.tar.gz
-tar xzf 3x-ui-glass.tar.gz
+wget https://github.com/alir3zai/3x-ui-glass/releases/download/v4.2/3x-ui-glass-amd64.tar.gz
+tar xzf 3x-ui-glass-amd64.tar.gz
 cd 3x-ui-glass
 bash install.sh
 ```
