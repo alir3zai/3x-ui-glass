@@ -164,6 +164,12 @@
 body.light .inbound-card {
   background: rgba(255, 255, 255, 0.60);
   border-color: rgba(99, 102, 241, 0.12);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+  transition: backdrop-filter 0.2s, -webkit-backdrop-filter 0.2s, background 0.2s, border-color 0.2s;
+}
+
+body.light .inbound-card:hover {
   -webkit-backdrop-filter: blur(10px);
   backdrop-filter: blur(10px);
 }
@@ -176,9 +182,16 @@ body.light .inbound-card.is-selected {
 /* ── Glass overrides (dark mode) ── */
 body.dark .inbound-card {
   background: rgba(255, 255, 255, 0.04);
-  border-color: rgba(255, 255, 255, 0.08);
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
+  border-color: rgba(255, 255, 255, 0.15);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+body.dark .inbound-card:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 body.dark .inbound-card.is-selected {
@@ -340,8 +353,6 @@ body.dark .inbound-card.is-selected {
 /* ── Glass overrides for client panel (light) ── */
 body.light .icp-table {
   background: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(99, 102, 241, 0.10);
   border-radius: 8px;
 }
@@ -355,8 +366,6 @@ body.light .icp-row:hover {
 /* ── Glass overrides for client panel (dark) ── */
 body.dark .icp-table {
   background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
   border: 1px solid rgba(255, 255, 255, 0.07);
   border-radius: 8px;
 }
@@ -367,22 +376,36 @@ body.dark .icp-row:hover {
   background: rgba(255, 255, 255, 0.04);
 }
 
-@media (max-width: 600px) {
-  /* ── icp-table: compact on small screens, scroll horizontally ── */
+/* ── Mobile: hide Used/Remaining/Status, show only Client + Actions ── */
+@media (max-width: 768px) {
+  .icp-wrap {
+    overflow-x: hidden;
+  }
+  .icp-th-used,
+  .icp-td-used,
+  .icp-th-remain,
+  .icp-td-remain,
+  .icp-th-status,
+  .icp-td-status {
+    display: none;
+  }
+  .icp-email {
+    max-width: 180px;
+  }
   .icp-table {
     font-size: 11px;
   }
   .icp-th, .icp-td {
-    padding: 5px 6px;
-  }
-  .icp-email {
-    max-width: 100px;
+    padding: 5px 8px;
   }
   .icp-td-name {
     min-width: 0;
   }
-  .icp-traffic {
-    min-width: 0;
+}
+
+@media (max-width: 400px) {
+  .icp-email {
+    max-width: 110px;
   }
 }
 

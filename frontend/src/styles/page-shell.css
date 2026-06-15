@@ -4,15 +4,23 @@ html, body {
 }
 
 body.dark {
-  background: linear-gradient(160deg, #050508 0%, #080d14 35%, #0a1628 65%, #050508 100%);
-  background-size: cover;
+  background: transparent;
   min-height: 100vh;
 }
 
-html[data-theme="ultra-dark"] body.dark {
+body.dark::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
   background: linear-gradient(160deg, #050508 0%, #080d14 35%, #0a1628 65%, #050508 100%);
-  background-size: cover;
-  min-height: 100vh;
+  z-index: -1;
+  pointer-events: none;
+}
+
+html[data-theme="ultra-black"] body.dark::before {
+  background: #020203;
 }
 
 body.light {
@@ -47,7 +55,7 @@ body.light {
 .groups-page.is-dark,
 .api-docs-page.is-dark {
   --bg-page: transparent;
-  --bg-card: rgba(255, 255, 255, 0.05);
+  --bg-card: rgba(255, 255, 255, 0.03);
 }
 
 .index-page.is-dark.is-ultra,
@@ -60,6 +68,18 @@ body.light {
 .api-docs-page.is-dark.is-ultra {
   --bg-page: transparent;
   --bg-card: rgba(255, 255, 255, 0.03);
+}
+
+html[data-theme="ultra-black"] .index-page.is-dark,
+html[data-theme="ultra-black"] .clients-page.is-dark,
+html[data-theme="ultra-black"] .inbounds-page.is-dark,
+html[data-theme="ultra-black"] .xray-page.is-dark,
+html[data-theme="ultra-black"] .settings-page.is-dark,
+html[data-theme="ultra-black"] .nodes-page.is-dark,
+html[data-theme="ultra-black"] .groups-page.is-dark,
+html[data-theme="ultra-black"] .api-docs-page.is-dark {
+  --bg-page: transparent;
+  --bg-card: rgba(255, 255, 255, 0.02);
 }
 
 .index-page .ant-layout,
@@ -200,29 +220,29 @@ body.dark .ant-dropdown-menu-item-divider {
 body.light .ant-alert-error {
   background: rgba(255, 77, 79, 0.07);
   border-color: rgba(255, 77, 79, 0.18);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
 }
 
 body.light .ant-alert-warning {
   background: rgba(250, 173, 20, 0.08);
   border-color: rgba(250, 173, 20, 0.20);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
 }
 
 body.light .ant-alert-info {
   background: rgba(99, 102, 241, 0.08);
   border-color: rgba(99, 102, 241, 0.22);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
 }
 
 body.light .ant-alert-success {
   background: rgba(82, 196, 26, 0.07);
   border-color: rgba(82, 196, 26, 0.18);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
 }
 
 body.light .ant-message-notice-content {
@@ -237,29 +257,29 @@ body.light .ant-message-notice-content {
 body.dark .ant-alert-error {
   background: rgba(255, 77, 79, 0.10);
   border-color: rgba(255, 77, 79, 0.22);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
 }
 
 body.dark .ant-alert-warning {
   background: rgba(250, 173, 20, 0.10);
   border-color: rgba(250, 173, 20, 0.22);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
 }
 
 body.dark .ant-alert-info {
   background: rgba(99, 102, 241, 0.12);
   border-color: rgba(99, 102, 241, 0.28);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
 }
 
 body.dark .ant-alert-success {
   background: rgba(82, 196, 26, 0.10);
   border-color: rgba(82, 196, 26, 0.22);
-  -webkit-backdrop-filter: blur(8px);
-  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
 }
 
 body.dark .ant-message-notice-content {
@@ -272,4 +292,30 @@ body.dark .ant-message-notice-content {
 
 body.dark .ant-result {
   background: transparent;
+}
+
+/* ── Dark mode: Ant Design Card glassmorphism ── */
+.index-page.is-dark .ant-card,
+.clients-page.is-dark .ant-card,
+.inbounds-page.is-dark .ant-card,
+.xray-page.is-dark .ant-card,
+.settings-page.is-dark .ant-card,
+.nodes-page.is-dark .ant-card,
+.groups-page.is-dark .ant-card,
+.api-docs-page.is-dark .ant-card {
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+}
+
+.index-page.is-dark .ant-card:hover,
+.clients-page.is-dark .ant-card:hover,
+.inbounds-page.is-dark .ant-card:hover,
+.xray-page.is-dark .ant-card:hover,
+.settings-page.is-dark .ant-card:hover,
+.nodes-page.is-dark .ant-card:hover,
+.groups-page.is-dark .ant-card:hover,
+.api-docs-page.is-dark .ant-card:hover {
+  background: rgba(255, 255, 255, 0.07) !important;
 }

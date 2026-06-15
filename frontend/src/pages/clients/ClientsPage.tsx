@@ -1,4 +1,5 @@
 import { lazy, useCallback, useEffect, useMemo, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
   Badge,
@@ -42,6 +43,7 @@ import {
   SortAscendingOutlined,
   TagsOutlined,
   TeamOutlined,
+  ThunderboltOutlined,
   UsergroupAddOutlined,
   UsergroupDeleteOutlined,
 } from '@ant-design/icons';
@@ -49,20 +51,24 @@ import {
 import { useTheme } from '@/hooks/useTheme';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useWebSocket } from '@/hooks/useWebSocket';
-import { useClients } from '@/hooks/useClients';
+import { useClients, fetchAllClientPages } from '@/hooks/useClients';
+import { useIpLimitViolations } from '@/hooks/useIpLimitViolations';
 import { useDatepicker } from '@/hooks/useDatepicker';
 import type { ClientRecord, InboundOption } from '@/hooks/useClients';
 import AppSidebar from '@/layouts/AppSidebar';
 import { IntlUtil, SizeFormatter } from '@/utils';
 import { setMessageInstance } from '@/utils/messageBus';
 import { LazyMount } from '@/components/utility';
+import { IpViolationBadge } from '@/components/ui';
 const ClientFormModal = lazy(() => import('./ClientFormModal'));
 const ClientInfoModal = lazy(() => import('./ClientInfoModal'));
 const ClientQrModal = lazy(() => import('./ClientQrModal'));
+const SharedQrModal = lazy(() => import('@/components/shared/SharedQrModal'));
 const ClientBulkAddModal = lazy(() => import('./ClientBulkAddModal'));
 const ClientBulkAdjustModal = lazy(() => import('./ClientBulkAdjustModal'));
 const FilterDrawer = lazy(() => import('./FilterDrawer'));
 const SubLinksModal = lazy(() => import('./SubLinksModal'));
+const ExportLinksModal = lazy(() => import('./ExportLinksModal'));
 const BulkAddToGroupModal = lazy(() => import('./BulkAddToGroupModal'));
 const BulkAttachInboundsModal = lazy(() => import('./BulkAttachInboundsModal'));
 const BulkDetachInboundsModal = lazy(() => import('./BulkDetachInboundsModal'));
@@ -146,6 +152,8 @@ function readFilterState(): PersistedFilterState {
         protocols: Array.isArray(fromRaw.protocols) ? fromRaw.protocols : [],
         inboundIds: Array.isArray(fromRaw.inboundIds) ? fromRaw.inboundIds : [],
         groups: Array.isArray(fromRaw.groups) ? fromRaw.groups : [],
+        ipViolation: (fromRaw.ipViolation === 'any' || fromRaw.ipViolation === 'active') ? fromRaw.ipViolation : '',
+        violationTimeRange: (['today', 'week', 'month'] as const).includes(fromRaw.violationTimeRange as 'today' | 'week' | 'month') ? fromRaw.violationTimeRange as 'today' | 'week' | 'month' : '',
       },
       sort: typeof raw.sort === 'string' ? raw.sort : '',
     };
@@ -191,14 +199,15 @@ export default function ClientsPage() {
     clients, filtered,
     summary: serverSummary,
     allGroups,
-    setQuery,
+    query, setQuery,
     inbounds, onlines, loading, fetched, fetchError, subSettings,
     ipLimitEnable, tgBotEnable, expireDiff, trafficDiff, pageSize,
     create, update, remove, bulkDelete, bulkAdjust, bulkAddToGroup, bulkRemoveFromGroup, attach, bulkAttach, detach, bulkDetach,
-    resetTraffic, resetAllTraffics, delDepleted, setEnable,
+    resetTraffic, resetAllTraffics, delDepleted, setEnable, setExemptFromMultiplier,
     applyTrafficEvent, applyClientStatsEvent,
     refresh,
     hydrate,
+    trafficMultiplier,
   } = useClients();
 
   useWebSocket({
@@ -206,7 +215,10 @@ export default function ClientsPage() {
     client_stats: applyClientStatsEvent,
   });
 
+  const { violations, violationSet, violationHistorySet } = useIpLimitViolations();
+
   const [togglingEmail, setTogglingEmail] = useState<string | null>(null);
+  const [exemptTogglingEmail, setExemptTogglingEmail] = useState<string | null>(null);
   const [formOpen, setFormOpen] = useState(false);
   const [formMode, setFormMode] = useState<'add' | 'edit'>('add');
   const [editingClient, setEditingClient] = useState<ClientRecord | null>(null);
@@ -215,12 +227,14 @@ export default function ClientsPage() {
   const [infoClient, setInfoClient] = useState<ClientRecord | null>(null);
   const [qrOpen, setQrOpen] = useState(false);
   const [qrClient, setQrClient] = useState<ClientRecord | null>(null);
+  const [newClientQr, setNewClientQr] = useState<{ email: string; subId: string } | null>(null);
   const [bulkAddOpen, setBulkAddOpen] = useState(false);
   const [bulkAdjustOpen, setBulkAdjustOpen] = useState(false);
   const [subLinksOpen, setSubLinksOpen] = useState(false);
   const [bulkGroupOpen, setBulkGroupOpen] = useState(false);
   const [bulkAttachOpen, setBulkAttachOpen] = useState(false);
   const [bulkDetachOpen, setBulkDetachOpen] = useState(false);
+  const [exportLinksOpen, setExportLinksOpen] = useState(false);
   const [selectedRowKeys, setSelectedRowKeys] = useState<string[]>([]);
 
   const initial = readFilterState();
@@ -341,17 +355,68 @@ export default function ClientsPage() {
   // Server-computed counts that stay stable as the user paginates/filters.
   const summary = serverSummary;
 
-  // Sort is server-side now; the page already arrives in the requested
-  // order, so we just hand it through.
-  const sortedClients = filteredClients;
+  const violationFilterActive = !!filters.ipViolation;
+
+  const matchesViolationFilter = useCallback((email: string) => {
+    const nowSec = Date.now() / 1000;
+    const rangeSeconds: Record<string, number> = { today: 86400, week: 604800, month: 2592000 };
+    const v = violations[email];
+    if (!v || v.count === 0) return false;
+    if (filters.ipViolation === 'active' && !v.active) return false;
+    if (filters.violationTimeRange && rangeSeconds[filters.violationTimeRange]) {
+      if (v.last_time < nowSec - rangeSeconds[filters.violationTimeRange]) return false;
+    }
+    return true;
+  }, [filters.ipViolation, filters.violationTimeRange, violations]);
+
+  // The violation filter is client-side (the violations dataset isn't
+  // queryable server-side), so it can't simply be applied to whichever page
+  // the table happens to be on — that would only ever surface violations
+  // among the ~25 rows already fetched. Instead, while the filter is active,
+  // pull every row matching the other search/filter/sort criteria across all
+  // pages, then filter and paginate that full set client-side.
+  const violationAllQuery = useQuery({
+    queryKey: ['clients', 'violationAll', {
+      search: query.search, filter: query.filter, protocol: query.protocol, inbound: query.inbound,
+      sort: query.sort, order: query.order, expiryFrom: query.expiryFrom, expiryTo: query.expiryTo,
+      usageFrom: query.usageFrom, usageTo: query.usageTo, autoRenew: query.autoRenew,
+      hasTgId: query.hasTgId, hasComment: query.hasComment, group: query.group,
+    }],
+    queryFn: () => fetchAllClientPages({
+      search: query.search, filter: query.filter, protocol: query.protocol, inbound: query.inbound,
+      sort: query.sort, order: query.order, expiryFrom: query.expiryFrom, expiryTo: query.expiryTo,
+      usageFrom: query.usageFrom, usageTo: query.usageTo, autoRenew: query.autoRenew,
+      hasTgId: query.hasTgId, hasComment: query.hasComment, group: query.group,
+    }),
+    enabled: violationFilterActive,
+    staleTime: 30_000,
+  });
+
+  // Full set of rows (across all pages) matching the violation criteria —
+  // used both to paginate client-side and to size the pagination control.
+  const violationFilteredAll = useMemo(() => {
+    if (!violationFilterActive) return [];
+    const all = violationAllQuery.data ?? [];
+    return all.filter((c) => matchesViolationFilter(c.email));
+  }, [violationFilterActive, violationAllQuery.data, matchesViolationFilter]);
+
+  const sortedClients = useMemo(() => {
+    if (!violationFilterActive) return filteredClients;
+    const start = (currentPage - 1) * tablePageSize;
+    return violationFilteredAll.slice(start, start + tablePageSize);
+  }, [violationFilterActive, violationFilteredAll, currentPage, tablePageSize, filteredClients]);
 
   function trafficLabel(row: ClientRecord) {
     const t0 = row.traffic;
     if (!t0) return '-';
     const used = (t0.up || 0) + (t0.down || 0);
     const total = row.totalGB || 0;
-    if (total <= 0) return `${SizeFormatter.sizeFormat(used)} / ∞`;
-    return `${SizeFormatter.sizeFormat(used)} / ${SizeFormatter.sizeFormat(total)}`;
+    const base = total <= 0
+      ? `${SizeFormatter.sizeFormat(used)} / ∞`
+      : `${SizeFormatter.sizeFormat(used)} / ${SizeFormatter.sizeFormat(total)}`;
+    if (row.exemptFromMultiplier) return `${base} ⚡`;
+    if (trafficMultiplier > 1) return `${base} (×${trafficMultiplier})`;
+    return base;
   }
 
   function remainingLabel(row: ClientRecord) {
@@ -408,6 +473,18 @@ export default function ClientsPage() {
       }
     } finally {
       setTogglingEmail(null);
+    }
+  }
+
+  async function onToggleExemptFromMultiplier(row: ClientRecord) {
+    setExemptTogglingEmail(row.email);
+    try {
+      const msg = await setExemptFromMultiplier(row, !row.exemptFromMultiplier);
+      if (!msg?.success) {
+        messageApi.error(msg?.msg || t('somethingWentWrong'));
+      }
+    } finally {
+      setExemptTogglingEmail(null);
     }
   }
 
@@ -599,6 +676,15 @@ export default function ClientsPage() {
           <Tooltip title={t('pages.inbounds.resetTraffic')}>
             <Button size="small" type="text" icon={<RetweetOutlined />} onClick={() => onResetTraffic(record)} />
           </Tooltip>
+          <Tooltip title={t('pages.clients.exemptFromMultiplier')}>
+            <Button
+              size="small"
+              type="text"
+              loading={exemptTogglingEmail === record.email}
+              icon={<ThunderboltOutlined style={{ color: record.exemptFromMultiplier ? '#faad14' : 'rgba(0,0,0,0.35)' }} />}
+              onClick={() => onToggleExemptFromMultiplier(record)}
+            />
+          </Tooltip>
           <Tooltip title={t('edit')}>
             <Button size="small" type="text" icon={<EditOutlined />} onClick={() => onEdit(record)} />
           </Tooltip>
@@ -652,6 +738,9 @@ export default function ClientsPage() {
       render: (_v, record) => (
         <div className="email-cell">
           <span className="email">{record.email}</span>
+          {violationSet.has(record.email) && violations[record.email] && (
+            <IpViolationBadge entry={violations[record.email]} style={{ marginInlineStart: 4 }} />
+          )}
           {record.subId && <span className="sub" title={record.subId}>{record.subId}</span>}
           {record.comment && <span className="sub" title={record.comment}>{record.comment}</span>}
         </div>
@@ -746,21 +835,23 @@ export default function ClientsPage() {
       ),
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  ], [t, togglingEmail, clientBucket, isOnline, inboundsById, filters, allGroups, datepicker]);
+  ], [t, togglingEmail, exemptTogglingEmail, clientBucket, isOnline, inboundsById, filters, allGroups, datepicker]);
 
+  const tableTotal = violationFilterActive ? violationFilteredAll.length : filtered;
   const tablePagination = {
     current: currentPage,
     pageSize: tablePageSize,
-    total: filtered,
-    showSizeChanger: filtered > 10,
+    total: tableTotal,
+    showSizeChanger: tableTotal > 10,
     pageSizeOptions: ['10', '25', '50', '100', '200'],
-    hideOnSinglePage: filtered <= tablePageSize,
+    hideOnSinglePage: tableTotal <= tablePageSize,
     showTotal: (n: number) => `${n}`,
   };
 
   const rowSelection = {
     selectedRowKeys,
     onChange: (keys: React.Key[]) => setSelectedRowKeys(keys as string[]),
+    preserveSelectedRowKeys: true,
   };
 
   function toggleSelect(email: string, checked: boolean) {
@@ -772,11 +863,11 @@ export default function ClientsPage() {
   }
 
   function selectAll(checked: boolean) {
-    setSelectedRowKeys(checked ? filteredClients.map((c) => c.email) : []);
+    setSelectedRowKeys(checked ? sortedClients.map((c) => c.email) : []);
   }
 
-  const allSelected = filteredClients.length > 0 && selectedRowKeys.length === filteredClients.length;
-  const someSelected = selectedRowKeys.length > 0 && selectedRowKeys.length < filteredClients.length;
+  const allSelected = sortedClients.length > 0 && selectedRowKeys.length === sortedClients.length;
+  const someSelected = selectedRowKeys.length > 0 && selectedRowKeys.length < sortedClients.length;
 
   function clearOneFilter<K extends keyof ClientFilters>(key: K) {
     if (key === 'expiryFrom' || key === 'expiryTo') {
@@ -911,6 +1002,12 @@ export default function ClientsPage() {
                                       icon: <LinkOutlined />,
                                       label: t('pages.clients.subLinks'),
                                       onClick: () => setSubLinksOpen(true),
+                                    },
+                                    {
+                                      key: 'exportLinks',
+                                      icon: <LinkOutlined />,
+                                      label: t('pages.clients.exportLinks'),
+                                      onClick: () => setExportLinksOpen(true),
                                     },
                                   ]
                                 : [
@@ -1063,6 +1160,11 @@ export default function ClientsPage() {
                               {t('pages.clients.comment')}: {filters.hasComment === 'yes' ? t('pages.clients.has') : t('pages.clients.hasNot')}
                             </Tag>
                           )}
+                          {filters.ipViolation && (
+                            <Tag closable color="red" onClose={() => setFilters({ ...filters, ipViolation: '', violationTimeRange: '' })}>
+                              {t('pages.clients.ipLimitViolation')}{filters.violationTimeRange ? `: ${t(`pages.clients.ipViolation${filters.violationTimeRange.charAt(0).toUpperCase() + filters.violationTimeRange.slice(1)}`)}` : ''}
+                            </Tag>
+                          )}
                         </div>
                       )}
 
@@ -1070,13 +1172,14 @@ export default function ClientsPage() {
                         <Table<ClientRecord>
                           columns={columns}
                           dataSource={sortedClients}
-                          loading={loading}
+                          loading={loading || (violationFilterActive && violationAllQuery.isFetching)}
                           rowKey="email"
                           rowSelection={rowSelection}
                           pagination={tablePagination}
                           size="small"
                           scroll={{ x: 1200 }}
                           onChange={onTableChange}
+                          rowClassName={(record) => violationHistorySet.has(record.email) ? 'violation-row' : ''}
                           locale={{
                             emptyText: (
                               <div className="clients-empty">
@@ -1087,9 +1190,9 @@ export default function ClientsPage() {
                           }}
                         />
                       ) : (
-                        <Spin spinning={loading}>
+                        <Spin spinning={loading || (violationFilterActive && violationAllQuery.isFetching)}>
                           <div className="client-cards">
-                            {filteredClients.length > 0 && (
+                            {sortedClients.length > 0 && (
                               <div className="card-bulk-bar">
                                 <Checkbox
                                   checked={allSelected}
@@ -1103,21 +1206,21 @@ export default function ClientsPage() {
                                 )}
                               </div>
                             )}
-                            {filteredClients.length === 0 && (
+                            {sortedClients.length === 0 && (
                               <div className="card-empty">
                                 <TeamOutlined style={{ fontSize: 28, opacity: 0.5 }} />
                                 <div>{t('noData')}</div>
                               </div>
                             )}
-                            {filteredClients.length > 0 && (
+                            {sortedClients.length > 0 && (
                               <div className="card-pagination">
                                 <Pagination
                                   current={currentPage}
                                   pageSize={tablePageSize}
-                                  total={filtered}
-                                  showSizeChanger={filtered > 10}
+                                  total={tableTotal}
+                                  showSizeChanger={tableTotal > 10}
                                   pageSizeOptions={['10', '25', '50', '100', '200']}
-                                  hideOnSinglePage={filtered <= tablePageSize}
+                                  hideOnSinglePage={tableTotal <= tablePageSize}
                                   size="small"
                                   showTotal={(n) => `${n}`}
                                   onChange={(p, s) => {
@@ -1127,10 +1230,10 @@ export default function ClientsPage() {
                                 />
                               </div>
                             )}
-                            {filteredClients.map((row) => {
+                            {sortedClients.map((row) => {
                               const bucket = clientBucket(row);
                               return (
-                                <div key={row.email} className={`client-card${selectedRowKeys.includes(row.email) ? ' is-selected' : ''}`}>
+                                <div key={row.email} className={`client-card${selectedRowKeys.includes(row.email) ? ' is-selected' : ''}${violationHistorySet.has(row.email) ? ' has-violation' : ''}`}>
                                   <div className="card-head">
                                     <Checkbox
                                       checked={selectedRowKeys.includes(row.email)}
@@ -1138,6 +1241,9 @@ export default function ClientsPage() {
                                     />
                                     <Badge status={bucketBadgeStatus(bucket)} />
                                     <span className="tag-name">{row.email}</span>
+                                    {violationSet.has(row.email) && violations[row.email] && (
+                                      <IpViolationBadge entry={violations[row.email]} />
+                                    )}
                                     {bucket === 'depleted' && <Tag color="red" className="status-tag">{t('depleted')}</Tag>}
                                     {bucket === 'expiring' && <Tag color="orange" className="status-tag">{t('depletingSoon')}</Tag>}
                                     <div className="card-actions" onClick={(e) => e.stopPropagation()}>
@@ -1150,6 +1256,14 @@ export default function ClientsPage() {
                                         loading={togglingEmail === row.email}
                                         onChange={(next) => onToggleEnable(row, next)}
                                       />
+                                      <Tooltip title={t('pages.clients.exemptFromMultiplier')}>
+                                        <ThunderboltOutlined
+                                          className="row-action-trigger"
+                                          spin={exemptTogglingEmail === row.email}
+                                          style={{ color: row.exemptFromMultiplier ? '#faad14' : 'rgba(0,0,0,0.35)' }}
+                                          onClick={() => onToggleExemptFromMultiplier(row)}
+                                        />
+                                      </Tooltip>
                                       <Dropdown
                                         trigger={['click']}
                                         placement="bottomRight"
@@ -1209,6 +1323,16 @@ export default function ClientsPage() {
             groups={allGroups}
             save={onSave}
             onOpenChange={setFormOpen}
+            onCreated={(email, subId) => { setFormOpen(false); setNewClientQr({ email, subId }); }}
+          />
+        </LazyMount>
+        <LazyMount when={!!newClientQr}>
+          <SharedQrModal
+            open={!!newClientQr}
+            email={newClientQr?.email ?? ''}
+            subId={newClientQr?.subId}
+            subSettings={subSettings}
+            onClose={() => setNewClientQr(null)}
           />
         </LazyMount>
         <LazyMount when={infoOpen}>
@@ -1218,6 +1342,7 @@ export default function ClientsPage() {
             inboundsById={inboundsById}
             isOnline={infoClient ? isOnline(infoClient.email) : false}
             subSettings={subSettings}
+            violation={infoClient?.email ? violations[infoClient.email] : undefined}
             onOpenChange={setInfoOpen}
           />
         </LazyMount>
@@ -1261,6 +1386,15 @@ export default function ClientsPage() {
             clients={clients}
             subSettings={subSettings}
             onOpenChange={setSubLinksOpen}
+          />
+        </LazyMount>
+        <LazyMount when={exportLinksOpen}>
+          <ExportLinksModal
+            open={exportLinksOpen}
+            emails={selectedRowKeys}
+            clients={clients}
+            subSettings={subSettings}
+            onOpenChange={setExportLinksOpen}
           />
         </LazyMount>
         <LazyMount when={bulkGroupOpen}>

@@ -220,11 +220,27 @@
   color: var(--ant-color-text-secondary);
 }
 
+/* ── IP violation: persistent red left border ── */
+.violation-row > td:first-child {
+  box-shadow: inset 3px 0 0 #ef4444;
+}
+
+.client-card.has-violation {
+  border-left: 3px solid #ef4444;
+}
+
 /* ── Dark mode: explicit overrides for mobile cards ── */
 body.dark .client-card {
-  background: rgba(255, 255, 255, 0.05);
-  border-color: rgba(255, 255, 255, 0.10);
+  background: rgba(255, 255, 255, 0.04);
+  border-color: rgba(255, 255, 255, 0.15);
   color: rgba(255, 255, 255, 0.88);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.3s ease;
+}
+
+body.dark .client-card:hover {
+  background: rgba(255, 255, 255, 0.07);
+  border-color: rgba(255, 255, 255, 0.2);
 }
 
 body.dark .client-card .tag-name,
