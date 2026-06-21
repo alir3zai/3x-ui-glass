@@ -137,5 +137,21 @@ systemctl restart ip-limiter
 tail -f /var/log/x-ui/ip_limiter.log
 ```
 
+## 📋 Changelog
+
+### v4.5.2
+- 🐛 **Fix**: Hysteria/Hysteria2 per-user traffic stats now correctly tracked — counters `user>>>email>>>traffic>>>uplink/downlink` were always zero due to an upstream xray-core bug where `CounterConnection` blocked the `User()` type assertion in the hysteria proxy. Fixed by calling `TryUnwrapStatsConn` before the assertion. Patched xray binary included in release assets.
+
+### v4.5.1
+- ✨ Enhanced glassmorphism UI across all themes
+- 🐛 Fix cross-page client selection
+- 🐛 Fix export links URL fragment handling
+
+### v4.5.0
+- 🔒 IP Limit Enforcement via UUID swap
+- ⚠️ IP violation badge in panel
+- 📋 Bulk export subscription + vless links
+- 🐉 Dragon menu for server management
+
 ## 📄 License
 Based on [3X-UI](https://github.com/MHSanaei/3x-ui) by MHSanaei
