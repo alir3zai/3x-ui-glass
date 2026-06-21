@@ -7,7 +7,7 @@ github.com/Azure/go-ntlmssp/internal/md4
 github.com/andybalholm/brotli
 github.com/andybalholm/brotli/flate
 github.com/andybalholm/brotli/matchfinder
-# github.com/apernet/quic-go v0.59.1-0.20260217092621-db4786c77a22
+# github.com/apernet/quic-go v0.59.1-0.20260425001925-6c6cc9bcb716
 ## explicit; go 1.24
 github.com/apernet/quic-go
 github.com/apernet/quic-go/congestion
@@ -271,6 +271,44 @@ github.com/pelletier/go-toml/v2
 github.com/pelletier/go-toml/v2/internal/characters
 github.com/pelletier/go-toml/v2/internal/tracker
 github.com/pelletier/go-toml/v2/unstable
+# github.com/pion/dtls/v3 v3.1.2
+## explicit; go 1.24.0
+github.com/pion/dtls/v3
+github.com/pion/dtls/v3/internal/ciphersuite
+github.com/pion/dtls/v3/internal/ciphersuite/types
+github.com/pion/dtls/v3/internal/closer
+github.com/pion/dtls/v3/internal/net
+github.com/pion/dtls/v3/internal/net/udp
+github.com/pion/dtls/v3/internal/util
+github.com/pion/dtls/v3/pkg/crypto/ccm
+github.com/pion/dtls/v3/pkg/crypto/ciphersuite
+github.com/pion/dtls/v3/pkg/crypto/clientcertificate
+github.com/pion/dtls/v3/pkg/crypto/elliptic
+github.com/pion/dtls/v3/pkg/crypto/hash
+github.com/pion/dtls/v3/pkg/crypto/prf
+github.com/pion/dtls/v3/pkg/crypto/signature
+github.com/pion/dtls/v3/pkg/crypto/signaturehash
+github.com/pion/dtls/v3/pkg/net
+github.com/pion/dtls/v3/pkg/protocol
+github.com/pion/dtls/v3/pkg/protocol/alert
+github.com/pion/dtls/v3/pkg/protocol/extension
+github.com/pion/dtls/v3/pkg/protocol/handshake
+github.com/pion/dtls/v3/pkg/protocol/recordlayer
+# github.com/pion/logging v0.2.4
+## explicit; go 1.20
+github.com/pion/logging
+# github.com/pion/stun/v3 v3.1.2
+## explicit; go 1.24.0
+github.com/pion/stun/v3
+github.com/pion/stun/v3/internal/hmac
+# github.com/pion/transport/v4 v4.0.1
+## explicit; go 1.21
+github.com/pion/transport/v4
+github.com/pion/transport/v4/deadline
+github.com/pion/transport/v4/netctx
+github.com/pion/transport/v4/replaydetector
+github.com/pion/transport/v4/stdnet
+github.com/pion/transport/v4/utils/xor
 # github.com/pires/go-proxyproto v0.12.0
 ## explicit; go 1.25
 github.com/pires/go-proxyproto
@@ -412,6 +450,9 @@ github.com/vishvananda/netlink/nl
 # github.com/vishvananda/netns v0.0.5
 ## explicit; go 1.17
 github.com/vishvananda/netns
+# github.com/wlynxg/anet v0.0.5
+## explicit; go 1.20
+github.com/wlynxg/anet
 # github.com/xlzd/gotp v0.1.0
 ## explicit; go 1.17
 github.com/xlzd/gotp
@@ -422,12 +463,13 @@ github.com/xtls/reality/fips140tls
 github.com/xtls/reality/hpke
 github.com/xtls/reality/tls12
 github.com/xtls/reality/tls13
-# github.com/xtls/xray-core v1.260327.0
+# github.com/xtls/xray-core v1.260327.1-0.20260601021109-94ffd50060f1
 ## explicit; go 1.26
 github.com/xtls/xray-core/app/commander
 github.com/xtls/xray-core/app/dispatcher
 github.com/xtls/xray-core/app/dns
 github.com/xtls/xray-core/app/dns/fakedns
+github.com/xtls/xray-core/app/geodata
 github.com/xtls/xray-core/app/log
 github.com/xtls/xray-core/app/log/command
 github.com/xtls/xray-core/app/metrics
@@ -457,6 +499,8 @@ github.com/xtls/xray-core/common/ctx
 github.com/xtls/xray-core/common/dice
 github.com/xtls/xray-core/common/drain
 github.com/xtls/xray-core/common/errors
+github.com/xtls/xray-core/common/geodata
+github.com/xtls/xray-core/common/geodata/strmatcher
 github.com/xtls/xray-core/common/log
 github.com/xtls/xray-core/common/mux
 github.com/xtls/xray-core/common/net
@@ -480,7 +524,6 @@ github.com/xtls/xray-core/common/signal/done
 github.com/xtls/xray-core/common/signal/pubsub
 github.com/xtls/xray-core/common/signal/semaphore
 github.com/xtls/xray-core/common/singbridge
-github.com/xtls/xray-core/common/strmatcher
 github.com/xtls/xray-core/common/task
 github.com/xtls/xray-core/common/utils
 github.com/xtls/xray-core/common/uuid
@@ -508,13 +551,13 @@ github.com/xtls/xray-core/proxy/freedom
 github.com/xtls/xray-core/proxy/http
 github.com/xtls/xray-core/proxy/hysteria
 github.com/xtls/xray-core/proxy/hysteria/account
-github.com/xtls/xray-core/proxy/hysteria/ctx
 github.com/xtls/xray-core/proxy/loopback
 github.com/xtls/xray-core/proxy/shadowsocks
 github.com/xtls/xray-core/proxy/shadowsocks_2022
 github.com/xtls/xray-core/proxy/socks
 github.com/xtls/xray-core/proxy/trojan
 github.com/xtls/xray-core/proxy/tun
+github.com/xtls/xray-core/proxy/tun/icmp
 github.com/xtls/xray-core/proxy/vless
 github.com/xtls/xray-core/proxy/vless/encoding
 github.com/xtls/xray-core/proxy/vless/encryption
@@ -533,15 +576,11 @@ github.com/xtls/xray-core/transport/internet/browser_dialer
 github.com/xtls/xray-core/transport/internet/finalmask
 github.com/xtls/xray-core/transport/internet/finalmask/fragment
 github.com/xtls/xray-core/transport/internet/finalmask/header/custom
-github.com/xtls/xray-core/transport/internet/finalmask/header/dns
-github.com/xtls/xray-core/transport/internet/finalmask/header/dtls
-github.com/xtls/xray-core/transport/internet/finalmask/header/srtp
-github.com/xtls/xray-core/transport/internet/finalmask/header/utp
-github.com/xtls/xray-core/transport/internet/finalmask/header/wechat
-github.com/xtls/xray-core/transport/internet/finalmask/header/wireguard
 github.com/xtls/xray-core/transport/internet/finalmask/mkcp/aes128gcm
+github.com/xtls/xray-core/transport/internet/finalmask/mkcp/header
 github.com/xtls/xray-core/transport/internet/finalmask/mkcp/original
 github.com/xtls/xray-core/transport/internet/finalmask/noise
+github.com/xtls/xray-core/transport/internet/finalmask/realm
 github.com/xtls/xray-core/transport/internet/finalmask/salamander
 github.com/xtls/xray-core/transport/internet/finalmask/sudoku
 github.com/xtls/xray-core/transport/internet/finalmask/xdns
@@ -556,7 +595,6 @@ github.com/xtls/xray-core/transport/internet/hysteria/congestion
 github.com/xtls/xray-core/transport/internet/hysteria/congestion/bbr
 github.com/xtls/xray-core/transport/internet/hysteria/congestion/brutal
 github.com/xtls/xray-core/transport/internet/hysteria/congestion/common
-github.com/xtls/xray-core/transport/internet/hysteria/padding
 github.com/xtls/xray-core/transport/internet/hysteria/udphop
 github.com/xtls/xray-core/transport/internet/kcp
 github.com/xtls/xray-core/transport/internet/reality
@@ -642,6 +680,8 @@ golang.org/x/sys/cpu
 golang.org/x/sys/unix
 golang.org/x/sys/windows
 golang.org/x/sys/windows/registry
+golang.org/x/sys/windows/svc
+golang.org/x/sys/windows/svc/mgr
 # golang.org/x/text v0.37.0
 ## explicit; go 1.25.0
 golang.org/x/text/cases
@@ -693,6 +733,9 @@ golang.zx2c4.com/wireguard/replay
 golang.zx2c4.com/wireguard/rwcancel
 golang.zx2c4.com/wireguard/tai64n
 golang.zx2c4.com/wireguard/tun
+# golang.zx2c4.com/wireguard/windows v1.0.1
+## explicit; go 1.25.0
+golang.zx2c4.com/wireguard/windows/tunnel/winipcfg
 # google.golang.org/genproto/googleapis/rpc v0.0.0-20260526163538-3dc84a4a5aaa
 ## explicit; go 1.25.0
 google.golang.org/genproto/googleapis/rpc/status
