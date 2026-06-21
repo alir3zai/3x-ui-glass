@@ -7,6 +7,7 @@ import {
   Select,
   Space,
   Switch,
+  message,
 } from 'antd';
 import type { AllSetting } from '@/models/setting';
 import { HttpUtil, LanguageManager } from '@/utils';
@@ -35,6 +36,31 @@ export default function GeneralTab({ allSetting, updateSetting }: GeneralTabProp
 
   const [lang, setLang] = useState<string>(() => LanguageManager.getLanguage());
   const [inboundOptions, setInboundOptions] = useState<{ label: string; value: string }[]>([]);
+  const [ipLimiterRunning, setIpLimiterRunning] = useState<boolean>(false);
+  const [ipLimiterLoading, setIpLimiterLoading] = useState<boolean>(false);
+  const [trafficMultiplier, setTrafficMultiplier] = useState<number>(() => allSetting.trafficMultiplier || 1);
+  const [multiplierLoading, setMultiplierLoading] = useState(false);
+
+  useEffect(() => {
+    HttpUtil.get<{ running: boolean }>('/panel/api/server/ipLimiter/status').then((msg) => {
+      if (msg?.success && msg.obj) setIpLimiterRunning(msg.obj.running);
+    });
+  }, []);
+
+  async function onIpLimiterToggle(enable: boolean) {
+    setIpLimiterLoading(true);
+    try {
+      const msg = await HttpUtil.post('/panel/api/server/ipLimiter/toggle', { enable });
+      if (msg?.success) {
+        setIpLimiterRunning(enable);
+        message.success(enable ? t('pages.settings.ipLimiter.enabled') : t('pages.settings.ipLimiter.disabled'));
+      } else {
+        message.error(msg?.msg || t('error'));
+      }
+    } finally {
+      setIpLimiterLoading(false);
+    }
+  }
 
   useEffect(() => {
     let cancelled = false;
@@ -88,6 +114,23 @@ export default function GeneralTab({ allSetting, updateSetting }: GeneralTabProp
 
   function setLdapInboundTagList(list: string[]) {
     updateSetting({ ldapInboundTags: Array.isArray(list) ? list.join(',') : '' });
+  }
+
+  async function onMultiplierChange(v: number) {
+    setMultiplierLoading(true);
+    setTrafficMultiplier(v);
+    try {
+      const msg = await HttpUtil.post('/panel/setting/trafficMultiplier', { multiplier: v });
+      if (msg?.success) {
+        updateSetting({ trafficMultiplier: v });
+        message.success(t('pages.settings.toasts.modifySettings'));
+      } else {
+        message.error(msg?.msg || t('somethingWentWrong'));
+        setTrafficMultiplier(allSetting.trafficMultiplier || 1);
+      }
+    } finally {
+      setMultiplierLoading(false);
+    }
   }
 
   function onLangChange(value: string) {
@@ -207,6 +250,26 @@ export default function GeneralTab({ allSetting, updateSetting }: GeneralTabProp
             <SettingListItem paddings="small" title={t('pages.settings.trafficDiff')} description={t('pages.settings.trafficDiffDesc')}>
               <InputNumber value={allSetting.trafficDiff} min={0} max={100} style={{ width: '100%' }}
                 onChange={(v) => updateSetting({ trafficDiff: Number(v) || 0 })} />
+            </SettingListItem>
+
+            <SettingListItem
+              paddings="small"
+              title="⚡ ضریب مصرف ترافیک"
+              description="با ضریب 2x، کاربری با 20GB فقط 10GB مصرف قابل استفاده دارد"
+            >
+              <Select
+                value={trafficMultiplier}
+                loading={multiplierLoading}
+                onChange={onMultiplierChange}
+                style={{ width: '100%' }}
+                options={[
+                  { label: '1x (پیش‌فرض)', value: 1 },
+                  { label: '2x', value: 2 },
+                  { label: '3x', value: 3 },
+                  { label: '4x', value: 4 },
+                  { label: '5x', value: 5 },
+                ]}
+              />
             </SettingListItem>
           </>
         ),
@@ -356,6 +419,23 @@ export default function GeneralTab({ allSetting, updateSetting }: GeneralTabProp
                 onChange={(v) => updateSetting({ ldapDefaultLimitIP: Number(v) || 0 })} />
             </SettingListItem>
           </>
+        ),
+      },
+      {
+        key: '7',
+        label: t('pages.settings.ipLimiter.title'),
+        children: (
+          <SettingListItem
+            paddings="small"
+            title={t('pages.settings.ipLimiter.enable')}
+            description={t('pages.settings.ipLimiter.enableDesc')}
+          >
+            <Switch
+              checked={ipLimiterRunning}
+              loading={ipLimiterLoading}
+              onChange={onIpLimiterToggle}
+            />
+          </SettingListItem>
         ),
       },
     ]} />

@@ -444,25 +444,26 @@ type Client struct {
 }
 
 type ClientRecord struct {
-	Id         int    `json:"id" gorm:"primaryKey;autoIncrement"`
-	Email      string `json:"email" gorm:"uniqueIndex;not null"`
-	SubID      string `json:"subId" gorm:"index;column:sub_id"`
-	UUID       string `json:"uuid" gorm:"column:uuid"`
-	Password   string `json:"password"`
-	Auth       string `json:"auth"`
-	Flow       string `json:"flow"`
-	Security   string `json:"security"`
-	Reverse    string `json:"reverse" gorm:"column:reverse"`
-	LimitIP    int    `json:"limitIp" gorm:"column:limit_ip"`
-	TotalGB    int64  `json:"totalGB" gorm:"column:total_gb"`
-	ExpiryTime int64  `json:"expiryTime" gorm:"column:expiry_time"`
-	Enable     bool   `json:"enable" gorm:"default:true"`
-	TgID       int64  `json:"tgId" gorm:"column:tg_id"`
-	Group      string `json:"group" gorm:"column:group_name;default:''"`
-	Comment    string `json:"comment"`
-	Reset      int    `json:"reset" gorm:"default:0"`
-	CreatedAt  int64  `json:"createdAt" gorm:"autoCreateTime:milli"`
-	UpdatedAt  int64  `json:"updatedAt" gorm:"autoUpdateTime:milli"`
+	Id                   int    `json:"id" gorm:"primaryKey;autoIncrement"`
+	Email                string `json:"email" gorm:"uniqueIndex;not null"`
+	SubID                string `json:"subId" gorm:"index;column:sub_id"`
+	UUID                 string `json:"uuid" gorm:"column:uuid"`
+	Password             string `json:"password"`
+	Auth                 string `json:"auth"`
+	Flow                 string `json:"flow"`
+	Security             string `json:"security"`
+	Reverse              string `json:"reverse" gorm:"column:reverse"`
+	LimitIP              int    `json:"limitIp" gorm:"column:limit_ip"`
+	TotalGB              int64  `json:"totalGB" gorm:"column:total_gb"`
+	ExpiryTime           int64  `json:"expiryTime" gorm:"column:expiry_time"`
+	Enable               bool   `json:"enable" gorm:"default:true"`
+	TgID                 int64  `json:"tgId" gorm:"column:tg_id"`
+	Group                string `json:"group" gorm:"column:group_name;default:''"`
+	Comment              string `json:"comment"`
+	Reset                int    `json:"reset" gorm:"default:0"`
+	ExemptFromMultiplier bool   `json:"exemptFromMultiplier" gorm:"column:exempt_from_multiplier;default:false"`
+	CreatedAt            int64  `json:"createdAt" gorm:"autoCreateTime:milli"`
+	UpdatedAt            int64  `json:"updatedAt" gorm:"autoUpdateTime:milli"`
 }
 
 func (ClientRecord) TableName() string { return "clients" }

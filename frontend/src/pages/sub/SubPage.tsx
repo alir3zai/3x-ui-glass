@@ -139,7 +139,7 @@ function parseLinkMeta(link: string, idx: number): { protocol: string; remark: s
 
 export default function SubPage() {
   const { t } = useTranslation();
-  const { isDark, isUltra, toggleTheme, toggleUltra, antdThemeConfig } = useTheme();
+  const { isDark, isUltra, isUltraBlack, cycleTheme: doThemeCycle, antdThemeConfig } = useTheme();
   const [messageApi, messageContextHolder] = message.useMessage();
   useEffect(() => { setMessageInstance(messageApi); }, [messageApi]);
 
@@ -159,16 +159,8 @@ export default function SubPage() {
 
   const cycleTheme = useCallback(() => {
     pauseAnimationsUntilLeave('sub-theme-cycle');
-    if (!isDark) {
-      toggleTheme();
-      if (isUltra) toggleUltra();
-    } else if (!isUltra) {
-      toggleUltra();
-    } else {
-      toggleUltra();
-      toggleTheme();
-    }
-  }, [isDark, isUltra, toggleTheme, toggleUltra]);
+    doThemeCycle();
+  }, [doThemeCycle]);
 
   const copy = useCallback(async (value: string) => {
     if (!value) return;
@@ -201,8 +193,9 @@ export default function SubPage() {
     const classes = ['subscription-page'];
     if (isDark) classes.push('is-dark');
     if (isUltra) classes.push('is-ultra');
+    if (isUltraBlack) classes.push('is-ultra-black');
     return classes.join(' ');
-  }, [isDark, isUltra]);
+  }, [isDark, isUltra, isUltraBlack]);
 
   const descriptionsItems = useMemo(() => {
     const items = [
@@ -280,7 +273,13 @@ export default function SubPage() {
     [],
   );
 
-  const themeIcon = !isDark ? <SunOutlined /> : !isUltra ? <MoonOutlined /> : <MoonFilled />;
+  const themeIcon = !isDark
+    ? <SunOutlined />
+    : isUltraBlack
+      ? <span style={{ fontSize: '12px', lineHeight: 1 }}>🌑</span>
+      : !isUltra
+        ? <MoonOutlined />
+        : <MoonFilled />;
 
   const cardTitle = (
     <Space>

@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button, Divider, Modal, Popover, Tag, Tooltip, message } from 'antd';
-import { CopyOutlined, EyeOutlined, QrcodeOutlined, ReloadOutlined } from '@ant-design/icons';
+import { CopyOutlined, EyeOutlined, QrcodeOutlined, ReloadOutlined, WarningOutlined } from '@ant-design/icons';
 
 import { ClipboardManager, HttpUtil, IntlUtil, SizeFormatter } from '@/utils';
 import { useDatepicker } from '@/hooks/useDatepicker';
 import type { ClientRecord, InboundOption } from '@/hooks/useClients';
+import type { ViolationEntry } from '@/hooks/useIpLimitViolations';
 import { isPostQuantumLink } from '@/lib/xray/inbound-link';
 import { QrPanel } from '@/pages/inbounds/qr';
 import './ClientInfoModal.css';
@@ -107,6 +108,7 @@ interface ClientInfoModalProps {
   inboundsById: Record<number, InboundOption>;
   isOnline: boolean;
   subSettings?: SubSettings;
+  violation?: ViolationEntry;
   onOpenChange: (open: boolean) => void;
 }
 
@@ -130,6 +132,7 @@ export default function ClientInfoModal({
   inboundsById,
   isOnline,
   subSettings = DEFAULT_SUB,
+  violation,
   onOpenChange,
 }: ClientInfoModalProps) {
   const { datepicker } = useDatepicker();
@@ -356,6 +359,28 @@ export default function ClientInfoModal({
                     </Button>
                   </td>
                 </tr>
+                {violation && (violation.count > 0) && (
+                  <tr>
+                    <td>
+                      <WarningOutlined style={{ color: '#ef4444', marginInlineEnd: 4 }} />
+                      {t('pages.clients.ipLimitViolationTitle')}
+                    </td>
+                    <td>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <span>{t('pages.clients.ipLimitViolationTimes', { count: violation.count })}</span>
+                        {violation.last_time > 0 && (
+                          <span className="hint">{t('pages.clients.ipLimitViolationLast', { time: new Date(violation.last_time * 1000).toLocaleString() })}</span>
+                        )}
+                        {violation.last_ips.length > 0 && (
+                          <span className="hint" style={{ wordBreak: 'break-all' }}>{t('pages.clients.ipLimitViolationIPs', { ips: violation.last_ips.join(', ') })}</span>
+                        )}
+                        <Tag color={violation.active ? 'red' : 'default'} style={{ width: 'fit-content', marginTop: 2 }}>
+                          {violation.active ? t('pages.clients.ipViolationActive') : t('pages.clients.ipViolationExpired')}
+                        </Tag>
+                      </div>
+                    </td>
+                  </tr>
+                )}
                 <tr>
                   <td>{t('pages.inbounds.createdAt')}</td>
                   <td><Tag>{dateLabel(client.createdAt)}</Tag></td>

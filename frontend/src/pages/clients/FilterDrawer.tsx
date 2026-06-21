@@ -225,6 +225,39 @@ export default function FilterDrawer({
             ]}
           />
         </Form.Item>
+
+        <Form.Item label={t('pages.clients.ipLimitViolation')}>
+          <Space direction="vertical" style={{ width: '100%' }}>
+            <Radio.Group
+              value={filters.ipViolation}
+              onChange={(e) => {
+                const next = e.target.value as '' | 'any' | 'active';
+                patch('ipViolation', next);
+                if (!next) patch('violationTimeRange', '');
+              }}
+              optionType="button"
+              buttonStyle="solid"
+              options={[
+                { value: '', label: t('all') },
+                { value: 'any', label: t('pages.clients.ipViolationAny') },
+                { value: 'active', label: t('pages.clients.ipViolationActive') },
+              ]}
+            />
+            {filters.ipViolation && (
+              <Select
+                value={filters.violationTimeRange}
+                onChange={(v) => patch('violationTimeRange', v as '' | 'today' | 'week' | 'month')}
+                style={{ width: '100%' }}
+                options={[
+                  { value: '', label: t('all') },
+                  { value: 'today', label: t('pages.clients.ipViolationToday') },
+                  { value: 'week', label: t('pages.clients.ipViolationWeek') },
+                  { value: 'month', label: t('pages.clients.ipViolationMonth') },
+                ]}
+              />
+            )}
+          </Space>
+        </Form.Item>
       </Form>
     </Drawer>
   );

@@ -13,6 +13,7 @@ export class AllSetting {
   pageSize = 25;
   expireDiff = 0;
   trafficDiff = 0;
+  trafficMultiplier = 1;
   remarkModel = '-io';
   datepicker: 'gregorian' | 'jalalian' = 'gregorian';
   tgBotEnable = false;

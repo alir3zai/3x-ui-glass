@@ -41,6 +41,7 @@ var defaultValueMap = map[string]string{
 	"pageSize":                    "25",
 	"expireDiff":                  "0",
 	"trafficDiff":                 "0",
+	"trafficMultiplier":           "1",
 	"remarkModel":                 "-ieo",
 	"timeLocation":                "Local",
 	"tgBotEnable":                 "false",
@@ -473,6 +474,24 @@ func (s *SettingService) GetExpireDiff() (int, error) {
 
 func (s *SettingService) GetTrafficDiff() (int, error) {
 	return s.getInt("trafficDiff")
+}
+
+func (s *SettingService) GetTrafficMultiplier() (int, error) {
+	multiplier, err := s.getInt("trafficMultiplier")
+	if err != nil {
+		return 1, err
+	}
+	if multiplier < 1 {
+		return 1, nil
+	}
+	return multiplier, nil
+}
+
+func (s *SettingService) SetTrafficMultiplier(multiplier int) error {
+	if multiplier < 1 {
+		multiplier = 1
+	}
+	return s.setInt("trafficMultiplier", multiplier)
 }
 
 func (s *SettingService) GetSessionMaxAge() (int, error) {
@@ -948,7 +967,8 @@ func (s *SettingService) GetDefaultSettings(host string) (any, error) {
 		"subClashURI":    func() (any, error) { return s.GetSubClashURI() },
 		"remarkModel":    func() (any, error) { return s.GetRemarkModel() },
 		"datepicker":     func() (any, error) { return s.GetDatepicker() },
-		"ipLimitEnable":  func() (any, error) { return s.GetIpLimitEnable() },
+		"ipLimitEnable":      func() (any, error) { return s.GetIpLimitEnable() },
+		"trafficMultiplier": func() (any, error) { return s.GetTrafficMultiplier() },
 	}
 
 	result := make(map[string]any)

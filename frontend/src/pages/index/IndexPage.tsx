@@ -65,6 +65,7 @@ export default function IndexPage() {
   useEffect(() => { setMessageInstance(messageApi); }, [messageApi]);
 
   const [ipLimitEnable, setIpLimitEnable] = useState(false);
+  const [trafficMultiplier, setTrafficMultiplier] = useState(1);
   const [panelUpdateInfo, setPanelUpdateInfo] = useState<PanelUpdateInfo>({
     currentVersion: '',
     latestVersion: '',
@@ -87,8 +88,11 @@ export default function IndexPage() {
   const [loadingTip, setLoadingTip] = useState(t('loading'));
 
   useEffect(() => {
-    HttpUtil.post<{ ipLimitEnable?: boolean }>('/panel/setting/defaultSettings').then((msg) => {
-      if (msg?.success && msg.obj) setIpLimitEnable(!!msg.obj.ipLimitEnable);
+    HttpUtil.post<{ ipLimitEnable?: boolean; trafficMultiplier?: number }>('/panel/setting/defaultSettings').then((msg) => {
+      if (msg?.success && msg.obj) {
+        setIpLimitEnable(!!msg.obj.ipLimitEnable);
+        setTrafficMultiplier((msg.obj.trafficMultiplier as number) || 1);
+      }
     });
     HttpUtil.get<PanelUpdateInfo>('/panel/api/server/getPanelUpdateInfo').then((msg) => {
       if (msg?.success && msg.obj) setPanelUpdateInfo(msg.obj);
@@ -122,7 +126,7 @@ export default function IndexPage() {
     if (panelUpdateInfo.updateAvailable) {
       setPanelUpdateOpen(true);
     } else {
-      window.open('https://github.com/MHSanaei/3x-ui/releases', '_blank', 'noopener,noreferrer');
+      window.open('https://github.com/alir3zai/3x-ui-glass/releases', '_blank', 'noopener,noreferrer');
     }
   }
 
@@ -354,13 +358,26 @@ export default function IndexPage() {
                   </Col>
 
                   <Col xs={24} lg={12}>
-                    <Card title={t('pages.index.totalData')} hoverable>
+                    <Card
+                      title={
+                        <Space>
+                          {t('pages.index.totalData')}
+                          {trafficMultiplier > 1 && (
+                            <Tag color="orange">⚡ ×{trafficMultiplier}</Tag>
+                          )}
+                        </Space>
+                      }
+                      hoverable
+                    >
                       <Row gutter={isMobile ? [8, 8] : 0}>
                         <Col span={12}>
                           <Statistic
                             title={t('pages.index.sent')}
                             value={SizeFormatter.sizeFormat(status.netTraffic.sent)}
                             prefix={<CloudUploadOutlined />}
+                            suffix={trafficMultiplier > 1
+                              ? <span style={{ fontSize: '0.75em', opacity: 0.7 }}> → {SizeFormatter.sizeFormat(status.netTraffic.sent * trafficMultiplier)}</span>
+                              : undefined}
                           />
                         </Col>
                         <Col span={12}>
@@ -368,6 +385,9 @@ export default function IndexPage() {
                             title={t('pages.index.received')}
                             value={SizeFormatter.sizeFormat(status.netTraffic.recv)}
                             prefix={<CloudDownloadOutlined />}
+                            suffix={trafficMultiplier > 1
+                              ? <span style={{ fontSize: '0.75em', opacity: 0.7 }}> → {SizeFormatter.sizeFormat(status.netTraffic.recv * trafficMultiplier)}</span>
+                              : undefined}
                           />
                         </Col>
                       </Row>

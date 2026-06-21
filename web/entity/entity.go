@@ -32,11 +32,12 @@ type AllSetting struct {
 	PanelProxy        string `json:"panelProxy" form:"panelProxy"`                                   // Proxy URL for the panel's own outbound requests (GitHub/Telegram)
 
 	// UI settings
-	PageSize    int    `json:"pageSize" form:"pageSize" validate:"gte=1,lte=1000"`      // Number of items per page in lists
-	ExpireDiff  int    `json:"expireDiff" form:"expireDiff" validate:"gte=0"`           // Expiration warning threshold in days
-	TrafficDiff int    `json:"trafficDiff" form:"trafficDiff" validate:"gte=0,lte=100"` // Traffic warning threshold percentage
-	RemarkModel string `json:"remarkModel" form:"remarkModel"`                          // Remark model pattern for inbounds
-	Datepicker  string `json:"datepicker" form:"datepicker"`                            // Date picker format
+	PageSize          int    `json:"pageSize" form:"pageSize" validate:"gte=1,lte=1000"`                // Number of items per page in lists
+	ExpireDiff        int    `json:"expireDiff" form:"expireDiff" validate:"gte=0"`                     // Expiration warning threshold in days
+	TrafficDiff       int    `json:"trafficDiff" form:"trafficDiff" validate:"gte=0,lte=100"`           // Traffic warning threshold percentage
+	TrafficMultiplier int    `json:"trafficMultiplier" form:"trafficMultiplier" validate:"gte=1,lte=5"` // Global traffic usage multiplier (1x-5x)
+	RemarkModel       string `json:"remarkModel" form:"remarkModel"`                                    // Remark model pattern for inbounds
+	Datepicker        string `json:"datepicker" form:"datepicker"`                                      // Date picker format
 
 	// Telegram bot settings
 	TgBotEnable      bool   `json:"tgBotEnable" form:"tgBotEnable"`              // Enable Telegram bot notifications

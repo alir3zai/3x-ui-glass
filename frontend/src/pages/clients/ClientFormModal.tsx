@@ -69,6 +69,7 @@ interface ClientFormModalProps {
     meta: SaveMetaEdit | SaveMetaCreate,
   ) => Promise<ApiMsg | null>;
   onOpenChange: (open: boolean) => void;
+  onCreated?: (email: string, subId: string) => void;
 }
 
 interface FormState {
@@ -138,6 +139,7 @@ export default function ClientFormModal({
   groups = [],
   save,
   onOpenChange,
+  onCreated,
 }: ClientFormModalProps) {
   const { t } = useTranslation();
   const [messageApi, messageContextHolder] = message.useMessage();
@@ -373,7 +375,10 @@ export default function ClientFormModal({
           { isEdit: false },
         );
       }
-      if (msg?.success) close();
+      if (msg?.success) {
+        if (!isEdit) onCreated?.(form.email.trim(), form.subId);
+        close();
+      }
     } finally {
       setSubmitting(false);
     }

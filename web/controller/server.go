@@ -1,14 +1,16 @@
 package controller
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
+	"os"
+	"os/exec"
 	"regexp"
 	"slices"
 	"strconv"
 	"time"
 
-	"github.com/mhsanaei/3x-ui/v3/database"
 	"github.com/mhsanaei/3x-ui/v3/logger"
 	"github.com/mhsanaei/3x-ui/v3/web/entity"
 	"github.com/mhsanaei/3x-ui/v3/web/global"
@@ -28,6 +30,8 @@ type ServerController struct {
 	settingService     service.SettingService
 	panelService       service.PanelService
 	xrayMetricsService service.XrayMetricsService
+	apiTokenService    service.ApiTokenService
+	xraySettingService service.XraySettingService
 }
 
 // NewServerController creates a new ServerController, initializes routes, and starts background tasks.
@@ -68,6 +72,9 @@ func (a *ServerController) initRouter(g *gin.RouterGroup) {
 	g.POST("/xraylogs/:count", a.getXrayLogs)
 	g.POST("/importDB", a.importDB)
 	g.POST("/getNewEchCert", a.getNewEchCert)
+
+	g.GET("/ipLimiter/status", a.ipLimiterStatus)
+	g.POST("/ipLimiter/toggle", a.ipLimiterToggle)
 }
 
 // startTask registers the @2s ticker that refreshes server status, samples
@@ -280,9 +287,6 @@ func (a *ServerController) getDb(c *gin.Context) {
 	}
 
 	filename := "x-ui.db"
-	if database.IsPostgres() {
-		filename = "x-ui.dump"
-	}
 	if !filenameRegex.MatchString(filename) {
 		c.AbortWithError(http.StatusBadRequest, fmt.Errorf("invalid filename"))
 		return
@@ -366,4 +370,139 @@ func (a *ServerController) getNewmlkem768(c *gin.Context) {
 		return
 	}
 	jsonObj(c, out, nil)
+}
+
+const ipLimiterServiceFile = `/etc/systemd/system/ip-limiter.service`
+const ipLimiterConfFile = `/usr/local/x-ui/ip_limiter.conf`
+const ipLimiterServiceContent = `[Unit]
+Description=X-UI IP Limiter
+After=network.target x-ui.service
+Wants=x-ui.service
+
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3 /usr/local/x-ui/ip_limiter.py
+Restart=always
+RestartSec=10s
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target
+`
+
+func (a *ServerController) ipLimiterStatus(c *gin.Context) {
+	out, _ := exec.Command("systemctl", "is-active", "ip-limiter").Output()
+	running := len(out) >= 6 && string(out[:6]) == "active"
+	jsonObj(c, map[string]bool{"running": running}, nil)
+}
+
+type ipLimiterToggleForm struct {
+	Enable bool `json:"enable" form:"enable"`
+}
+
+// enableAccessLog ensures the xray template config has access log set to ./access.log
+// and restarts xray so the change takes effect.
+func (a *ServerController) enableAccessLog() error {
+	template, err := a.settingService.GetXrayConfigTemplate()
+	if err != nil {
+		return fmt.Errorf("get xray config template: %w", err)
+	}
+
+	var cfg map[string]json.RawMessage
+	if err := json.Unmarshal([]byte(template), &cfg); err != nil {
+		return fmt.Errorf("parse xray config: %w", err)
+	}
+
+	logSection := map[string]any{}
+	if raw, ok := cfg["log"]; ok && len(raw) > 0 {
+		_ = json.Unmarshal(raw, &logSection)
+	}
+
+	// Skip if access log is already pointing to a real file
+	if access, _ := logSection["access"].(string); access != "" && access != "none" {
+		return nil
+	}
+
+	logSection["access"] = "./access.log"
+	logJSON, err := json.Marshal(logSection)
+	if err != nil {
+		return err
+	}
+	cfg["log"] = logJSON
+
+	updated, err := json.Marshal(cfg)
+	if err != nil {
+		return err
+	}
+
+	if err := a.xraySettingService.SaveXraySetting(string(updated)); err != nil {
+		return fmt.Errorf("save xray config: %w", err)
+	}
+	return a.serverService.RestartXrayService()
+}
+
+func (a *ServerController) ipLimiterToggle(c *gin.Context) {
+	form := &ipLimiterToggleForm{}
+	if err := c.ShouldBind(form); err != nil {
+		jsonMsg(c, "invalid request", err)
+		return
+	}
+
+	if !form.Enable {
+		exec.Command("systemctl", "stop", "ip-limiter").Run()
+		exec.Command("systemctl", "disable", "ip-limiter").Run()
+		jsonMsg(c, "IP Limiter disabled", nil)
+		return
+	}
+
+	// Try to create a new token; if one named "ip-limiter" already exists, fetch it instead
+	tokenView, err := a.apiTokenService.Create("ip-limiter")
+	if err != nil {
+		// Token already exists — find it in the list
+		tokens, listErr := a.apiTokenService.List()
+		if listErr != nil {
+			jsonMsg(c, "failed to create or retrieve ip-limiter token", listErr)
+			return
+		}
+		for _, t := range tokens {
+			if t.Name == "ip-limiter" {
+				tokenView = t
+				break
+			}
+		}
+		if tokenView == nil {
+			jsonMsg(c, "failed to create ip-limiter token", err)
+			return
+		}
+	}
+
+	port, err := a.settingService.GetPort()
+	if err != nil {
+		port = 2053
+	}
+
+	conf := fmt.Sprintf("BASE_URL=http://127.0.0.1:%d\nAPI_TOKEN=%s\n", port, tokenView.Token)
+	if err := os.WriteFile(ipLimiterConfFile, []byte(conf), 0o644); err != nil {
+		jsonMsg(c, "failed to write ip_limiter.conf", err)
+		return
+	}
+
+	if err := os.WriteFile(ipLimiterServiceFile, []byte(ipLimiterServiceContent), 0o644); err != nil {
+		jsonMsg(c, "failed to write systemd service file", err)
+		return
+	}
+
+	exec.Command("systemctl", "daemon-reload").Run()
+	exec.Command("systemctl", "enable", "ip-limiter").Run()
+	if err := exec.Command("systemctl", "start", "ip-limiter").Run(); err != nil {
+		jsonMsg(c, "ip-limiter service failed to start", err)
+		return
+	}
+
+	if err := a.enableAccessLog(); err != nil {
+		logger.Warning("ip-limiter: failed to enable access log:", err)
+	}
+
+	jsonMsg(c, "IP Limiter enabled", nil)
 }

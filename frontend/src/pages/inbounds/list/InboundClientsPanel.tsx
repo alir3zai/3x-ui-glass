@@ -1,6 +1,7 @@
 import { lazy, useCallback, useMemo, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Badge, Button, Modal, Spin, Tag, Tooltip, message } from 'antd';
+import { IpViolationBadge } from '@/components/ui';
 import { DeleteOutlined, EditOutlined, QrcodeOutlined, WifiOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 
@@ -11,6 +12,7 @@ import { coerceInboundJsonField } from '@/models/dbinbound';
 import type { ClientStats } from '@/models/dbinbound';
 import type { InboundOption, ClientRecord } from '@/hooks/useClients';
 import SharedQrModal from '@/components/shared/SharedQrModal';
+import { useIpLimitViolations } from '@/hooks/useIpLimitViolations';
 
 const ClientFormModal = lazy(() => import('@/pages/clients/ClientFormModal'));
 
@@ -49,6 +51,7 @@ export default function InboundClientsPanel({ inboundId, onlineClients, subSetti
   const queryClient = useQueryClient();
   const [messageApi, messageContextHolder] = message.useMessage();
   const [modal, modalContextHolder] = Modal.useModal();
+  const { violations, violationSet } = useIpLimitViolations();
 
   // QR modal state
   const [qrOpen, setQrOpen] = useState(false);
@@ -234,6 +237,9 @@ export default function InboundClientsPanel({ inboundId, onlineClients, subSetti
                     </Tooltip>
                   )}
                   <span className="icp-email">{row.email}</span>
+                  {violationSet.has(row.email) && violations[row.email] && (
+                    <IpViolationBadge entry={violations[row.email]} />
+                  )}
                 </td>
 
                 <td className="icp-td icp-td-used">

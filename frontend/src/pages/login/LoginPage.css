@@ -55,6 +55,21 @@
   background: radial-gradient(ellipse at 25% 20%, #0a0a1a 0%, #000 60%);
 }
 
+.login-app.is-dark.is-ultra-black {
+  --bg-page: #000;
+  --bg-card: rgba(4, 4, 6, 0.7);
+  --bg-card-solid: #050506;
+  --color-border: rgba(255, 255, 255, 0.04);
+  --blob-1: rgba(99, 102, 241, 0.16);
+  --blob-2: rgba(236, 72, 153, 0.12);
+  --blob-3: rgba(34, 211, 238, 0.10);
+  --blob-4: rgba(251, 146, 60, 0.08);
+  --blob-5: rgba(168, 85, 247, 0.13);
+  --grid-color: rgba(255, 255, 255, 0.015);
+  --vignette: radial-gradient(ellipse at center, transparent 15%, rgba(0, 0, 0, 0.92) 100%);
+  background: #000;
+}
+
 .login-app::before,
 .login-app::after {
   content: '';

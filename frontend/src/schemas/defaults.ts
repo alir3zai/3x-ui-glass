@@ -15,6 +15,7 @@ export const DefaultsPayloadSchema = z.object({
   remarkModel: z.string().optional(),
   datepicker: z.enum(['gregorian', 'jalalian']).optional(),
   ipLimitEnable: z.boolean().optional(),
+  trafficMultiplier: z.number().optional(),
 }).loose();
 
 export type DefaultsPayload = z.infer<typeof DefaultsPayloadSchema>;

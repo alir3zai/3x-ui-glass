@@ -44,6 +44,7 @@ func (a *SettingController) initRouter(g *gin.RouterGroup) {
 	g.POST("/all", a.getAllSetting)
 	g.POST("/defaultSettings", a.getDefaultSettings)
 	g.POST("/update", a.updateSetting)
+	g.POST("/trafficMultiplier", a.updateTrafficMultiplier)
 	g.POST("/updateUser", a.updateUser)
 	g.POST("/restartPanel", a.restartPanel)
 	g.GET("/getDefaultJsonConfig", a.getDefaultXrayConfig)
@@ -86,6 +87,21 @@ func (a *SettingController) updateSetting(c *gin.Context) {
 			err = bumpErr
 		}
 	}
+	jsonMsg(c, I18nWeb(c, "pages.settings.toasts.modifySettings"), err)
+}
+
+// trafficMultiplierForm represents the payload for updating the global traffic multiplier.
+type trafficMultiplierForm struct {
+	Multiplier int `json:"multiplier" form:"multiplier" validate:"gte=1,lte=5"`
+}
+
+// updateTrafficMultiplier updates the global traffic multiplier setting.
+func (a *SettingController) updateTrafficMultiplier(c *gin.Context) {
+	form, ok := middleware.BindAndValidate[trafficMultiplierForm](c)
+	if !ok {
+		return
+	}
+	err := a.settingService.SetTrafficMultiplier(form.Multiplier)
 	jsonMsg(c, I18nWeb(c, "pages.settings.toasts.modifySettings"), err)
 }
 

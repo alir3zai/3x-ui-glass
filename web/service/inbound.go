@@ -617,15 +617,13 @@ func (s *InboundService) DelInbound(id int) (bool, error) {
 	if err := db.Delete(model.Inbound{}, id).Error; err != nil {
 		return needRestart, err
 	}
-	if !database.IsPostgres() {
-		var count int64
-		if err := db.Model(&model.Inbound{}).Count(&count).Error; err != nil {
+	var count int64
+	if err := db.Model(&model.Inbound{}).Count(&count).Error; err != nil {
+		return needRestart, err
+	}
+	if count == 0 {
+		if err := db.Exec("DELETE FROM sqlite_sequence WHERE name = ?", "inbounds").Error; err != nil {
 			return needRestart, err
-		}
-		if count == 0 {
-			if err := db.Exec("DELETE FROM sqlite_sequence WHERE name = ?", "inbounds").Error; err != nil {
-				return needRestart, err
-			}
 		}
 	}
 	return needRestart, nil
@@ -2108,10 +2106,32 @@ func (s *InboundService) disableInvalidClients(tx *gorm.DB) (bool, int64, error)
 	now := time.Now().Unix() * 1000
 	needRestart := false
 
+	multiplier := 1
+	if m, mErr := (&SettingService{}).GetTrafficMultiplier(); mErr == nil && m > 1 {
+		multiplier = m
+	}
+
 	var depletedRows []xray.ClientTraffic
-	err := tx.Model(xray.ClientTraffic{}).
-		Where("((total > 0 AND up + down >= total) OR (expiry_time > 0 AND expiry_time <= ?)) AND enable = ?", now, true).
-		Find(&depletedRows).Error
+	var err error
+	if multiplier > 1 {
+		// Effective limit for a client is total/multiplier (or just total when the
+		// client is exempt). Comparing (up+down)*effectiveMultiplier >= total avoids
+		// integer-division/float issues while staying equivalent to up+down >= total
+		// when the multiplier is 1, so exempt clients keep their normal limit.
+		err = tx.Raw(`
+			SELECT ct.* FROM client_traffics ct
+			LEFT JOIN clients c ON c.email = ct.email
+			WHERE ct.enable = ?
+			  AND (
+			    (ct.expiry_time > 0 AND ct.expiry_time <= ?)
+			    OR (ct.total > 0 AND (ct.up + ct.down) * (CASE WHEN COALESCE(c.exempt_from_multiplier, 0) = 1 THEN 1 ELSE ? END) >= ct.total)
+			  )
+		`, true, now, multiplier).Scan(&depletedRows).Error
+	} else {
+		err = tx.Model(xray.ClientTraffic{}).
+			Where("((total > 0 AND up + down >= total) OR (expiry_time > 0 AND expiry_time <= ?)) AND enable = ?", now, true).
+			Find(&depletedRows).Error
+	}
 	if err != nil {
 		return false, 0, err
 	}
@@ -2120,7 +2140,9 @@ func (s *InboundService) disableInvalidClients(tx *gorm.DB) (bool, int64, error)
 	}
 
 	depletedEmails := make([]string, 0, len(depletedRows))
+	depletedIDs := make([]int, 0, len(depletedRows))
 	for i := range depletedRows {
+		depletedIDs = append(depletedIDs, depletedRows[i].Id)
 		if depletedRows[i].Email == "" {
 			continue
 		}
@@ -2186,7 +2208,7 @@ func (s *InboundService) disableInvalidClients(tx *gorm.DB) (bool, int64, error)
 	}
 
 	result := tx.Model(xray.ClientTraffic{}).
-		Where("((total > 0 and up + down >= total) or (expiry_time > 0 and expiry_time <= ?)) and enable = ?", now, true).
+		Where("id IN ?", depletedIDs).
 		Update("enable", false)
 	err = result.Error
 	count := result.RowsAffected
@@ -3077,10 +3099,8 @@ func (s *InboundService) MigrationRequirements() {
 	defer func() {
 		if err == nil {
 			tx.Commit()
-			if !database.IsPostgres() {
-				if dbErr := db.Exec(`VACUUM "main"`).Error; dbErr != nil {
-					logger.Warningf("VACUUM failed: %v", dbErr)
-				}
+			if dbErr := db.Exec(`VACUUM "main"`).Error; dbErr != nil {
+				logger.Warningf("VACUUM failed: %v", dbErr)
 			}
 		} else {
 			tx.Rollback()
@@ -3205,13 +3225,6 @@ func (s *InboundService) MigrationRequirements() {
 	WHERE protocol in ('vmess','vless','trojan')
 	  AND json_extract(stream_settings, '$.security') = 'tls'
 	  AND json_extract(stream_settings, '$.tlsSettings.settings.domains') IS NOT NULL`
-	if database.IsPostgres() {
-		externalProxyQuery = `select id, port, stream_settings
-	from inbounds
-	WHERE protocol in ('vmess','vless','trojan')
-	  AND NULLIF(stream_settings, '')::jsonb #>> '{security}' = 'tls'
-	  AND NULLIF(stream_settings, '')::jsonb #> '{tlsSettings,settings,domains}' IS NOT NULL`
-	}
 	err = tx.Raw(externalProxyQuery).Scan(&externalProxy).Error
 	if err != nil || len(externalProxy) == 0 {
 		return

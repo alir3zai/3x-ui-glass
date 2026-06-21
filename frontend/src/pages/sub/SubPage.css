@@ -15,6 +15,11 @@
   --bg-card: #101013;
 }
 
+.subscription-page.is-dark.is-ultra-black {
+  --bg-page: #000;
+  --bg-card: #050506;
+}
+
 .subscription-page .ant-layout,
 .subscription-page .ant-layout-content {
   background: transparent;

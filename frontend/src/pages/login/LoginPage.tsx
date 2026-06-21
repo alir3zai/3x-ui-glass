@@ -37,7 +37,7 @@ const basePath = window.X_UI_BASE_PATH || '';
 
 export default function LoginPage() {
   const { t } = useTranslation();
-  const { isDark, isUltra, toggleTheme, toggleUltra, antdThemeConfig } = useTheme();
+  const { isDark, isUltra, isUltraBlack, cycleTheme: doThemeCycle, antdThemeConfig } = useTheme();
   const [messageApi, messageContextHolder] = message.useMessage();
 
   useEffect(() => {
@@ -90,23 +90,16 @@ export default function LoginPage() {
 
   const cycleTheme = useCallback(() => {
     pauseAnimationsUntilLeave('login-theme-cycle');
-    if (!isDark) {
-      toggleTheme();
-      if (isUltra) toggleUltra();
-    } else if (!isUltra) {
-      toggleUltra();
-    } else {
-      toggleUltra();
-      toggleTheme();
-    }
-  }, [isDark, isUltra, toggleTheme, toggleUltra]);
+    doThemeCycle();
+  }, [doThemeCycle]);
 
   const pageClass = useMemo(() => {
     const classes = ['login-app'];
     if (isDark) classes.push('is-dark');
     if (isUltra) classes.push('is-ultra');
+    if (isUltraBlack) classes.push('is-ultra-black');
     return classes.join(' ');
-  }, [isDark, isUltra]);
+  }, [isDark, isUltra, isUltraBlack]);
 
   const langMenuItems = useMemo(
     () => (LanguageManager.supportedLanguages as { value: string; name: string; icon: string }[]).map((l) => ({
@@ -121,7 +114,13 @@ export default function LoginPage() {
     [],
   );
 
-  const themeIcon = !isDark ? <SunOutlined /> : !isUltra ? <MoonOutlined /> : <MoonFilled />;
+  const themeIcon = !isDark
+    ? <SunOutlined />
+    : isUltraBlack
+      ? <span style={{ fontSize: '12px', lineHeight: 1 }}>🌑</span>
+      : !isUltra
+        ? <MoonOutlined />
+        : <MoonFilled />;
 
   return (
     <ConfigProvider theme={antdThemeConfig}>

@@ -3,6 +3,7 @@ package controller
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"time"
 
 	"github.com/mhsanaei/3x-ui/v3/database/model"
@@ -36,6 +37,7 @@ func (a *ClientController) initRouter(g *gin.RouterGroup) {
 	g.GET("/traffic/:email", a.getTrafficByEmail)
 	g.GET("/subLinks/:subId", a.getSubLinks)
 	g.GET("/links/:email", a.getClientLinks)
+	g.GET("/ipLimitViolations", a.ipLimitViolations)
 
 	g.POST("/add", a.create)
 	g.POST("/update/:email", a.update)
@@ -52,6 +54,7 @@ func (a *ClientController) initRouter(g *gin.RouterGroup) {
 	g.POST("/bulkResetTraffic", a.bulkResetTraffic)
 	g.POST("/resetTraffic/:email", a.resetTrafficByEmail)
 	g.POST("/updateTraffic/:email", a.updateTrafficByEmail)
+	g.POST("/exemptMultiplier/:email", a.setExemptFromMultiplier)
 	g.POST("/ips/:email", a.getIps)
 	g.POST("/clearIps/:email", a.clearIps)
 	g.POST("/onlines", a.onlines)
@@ -342,6 +345,25 @@ func (a *ClientController) updateTrafficByEmail(c *gin.Context) {
 	notifyClientsChanged()
 }
 
+type exemptFromMultiplierRequest struct {
+	Exempt bool `json:"exempt"`
+}
+
+func (a *ClientController) setExemptFromMultiplier(c *gin.Context) {
+	email := c.Param("email")
+	var req exemptFromMultiplierRequest
+	if err := c.ShouldBindJSON(&req); err != nil {
+		jsonMsg(c, I18nWeb(c, "somethingWentWrong"), err)
+		return
+	}
+	if err := a.clientService.SetExemptFromMultiplier(email, req.Exempt); err != nil {
+		jsonMsg(c, I18nWeb(c, "somethingWentWrong"), err)
+		return
+	}
+	jsonMsg(c, I18nWeb(c, "pages.inbounds.toasts.inboundClientUpdateSuccess"), nil)
+	notifyClientsChanged()
+}
+
 func (a *ClientController) getIps(c *gin.Context) {
 	email := c.Param("email")
 	ips, err := a.inboundService.GetInboundClientIps(email)
@@ -461,4 +483,32 @@ func (a *ClientController) bulkResetTraffic(c *gin.Context) {
 	jsonObj(c, gin.H{"affected": affected}, nil)
 	a.xrayService.SetToNeedRestart()
 	notifyClientsChanged()
+}
+
+// ViolationEntry mirrors the per-email object written by ip_limiter.py.
+type ViolationEntry struct {
+	Count    int      `json:"count"`
+	LastIPs  []string `json:"last_ips"`
+	LastTime float64  `json:"last_time"`
+	Active   bool     `json:"active"`
+}
+
+// ipLimitViolations reads /var/log/x-ui/ip_violations.json written by
+// ip_limiter.py and returns the full per-email violation data.
+func (a *ClientController) ipLimitViolations(c *gin.Context) {
+	const jsonPath = "/var/log/x-ui/ip_violations.json"
+
+	raw, err := os.ReadFile(jsonPath)
+	if err != nil {
+		jsonObj(c, map[string]ViolationEntry{}, nil)
+		return
+	}
+
+	var violations map[string]ViolationEntry
+	if err := json.Unmarshal(raw, &violations); err != nil {
+		jsonObj(c, map[string]ViolationEntry{}, nil)
+		return
+	}
+
+	jsonObj(c, violations, nil)
 }

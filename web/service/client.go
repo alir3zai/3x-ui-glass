@@ -1316,24 +1316,44 @@ func (s *ClientService) ResetTrafficByEmail(inboundSvc *InboundService, email st
 	return needRestart, nil
 }
 
+// SetExemptFromMultiplier toggles whether the given client is excluded from
+// the global traffic multiplier when its usage is checked against its limit.
+func (s *ClientService) SetExemptFromMultiplier(email string, exempt bool) error {
+	if email == "" {
+		return common.NewError("client email is required")
+	}
+	db := database.GetDB()
+	result := db.Model(&model.ClientRecord{}).
+		Where("email = ?", email).
+		Update("exempt_from_multiplier", exempt)
+	if result.Error != nil {
+		return result.Error
+	}
+	if result.RowsAffected == 0 {
+		return common.NewErrorf("client <%v> not found", email)
+	}
+	return nil
+}
+
 // ClientSlim is the row-shape used by the clients page. It drops fields the
 // table never reads (UUID, password, auth, flow, security, reverse, tgId)
 // so the list payload stays compact even when the panel manages thousands
 // of clients. Modals that need the full record still call /get/:email.
 type ClientSlim struct {
-	Email      string              `json:"email"`
-	SubID      string              `json:"subId"`
-	Enable     bool                `json:"enable"`
-	TotalGB    int64               `json:"totalGB"`
-	ExpiryTime int64               `json:"expiryTime"`
-	LimitIP    int                 `json:"limitIp"`
-	Reset      int                 `json:"reset"`
-	Group      string              `json:"group,omitempty"`
-	Comment    string              `json:"comment,omitempty"`
-	InboundIds []int               `json:"inboundIds"`
-	Traffic    *xray.ClientTraffic `json:"traffic,omitempty"`
-	CreatedAt  int64               `json:"createdAt"`
-	UpdatedAt  int64               `json:"updatedAt"`
+	Email                string              `json:"email"`
+	SubID                string              `json:"subId"`
+	Enable               bool                `json:"enable"`
+	TotalGB              int64               `json:"totalGB"`
+	ExpiryTime           int64               `json:"expiryTime"`
+	LimitIP              int                 `json:"limitIp"`
+	Reset                int                 `json:"reset"`
+	Group                string              `json:"group,omitempty"`
+	Comment              string              `json:"comment,omitempty"`
+	ExemptFromMultiplier bool                `json:"exemptFromMultiplier"`
+	InboundIds           []int               `json:"inboundIds"`
+	Traffic              *xray.ClientTraffic `json:"traffic,omitempty"`
+	CreatedAt            int64               `json:"createdAt"`
+	UpdatedAt            int64               `json:"updatedAt"`
 }
 
 // ClientPageParams are the query params accepted by /panel/api/clients/list/paged.
@@ -1885,19 +1905,20 @@ func buildClientsSummary(all []ClientWithAttachments, onlineSet map[string]struc
 
 func toClientSlim(c ClientWithAttachments) ClientSlim {
 	return ClientSlim{
-		Email:      c.Email,
-		SubID:      c.SubID,
-		Enable:     c.Enable,
-		TotalGB:    c.TotalGB,
-		ExpiryTime: c.ExpiryTime,
-		LimitIP:    c.LimitIP,
-		Reset:      c.Reset,
-		Group:      c.Group,
-		Comment:    c.Comment,
-		InboundIds: c.InboundIds,
-		Traffic:    c.Traffic,
-		CreatedAt:  c.CreatedAt,
-		UpdatedAt:  c.UpdatedAt,
+		Email:                c.Email,
+		SubID:                c.SubID,
+		Enable:               c.Enable,
+		TotalGB:              c.TotalGB,
+		ExpiryTime:           c.ExpiryTime,
+		LimitIP:              c.LimitIP,
+		Reset:                c.Reset,
+		Group:                c.Group,
+		Comment:              c.Comment,
+		ExemptFromMultiplier: c.ExemptFromMultiplier,
+		InboundIds:           c.InboundIds,
+		Traffic:              c.Traffic,
+		CreatedAt:            c.CreatedAt,
+		UpdatedAt:            c.UpdatedAt,
 	}
 }
 

@@ -23,7 +23,6 @@ import (
 	"time"
 
 	"github.com/mhsanaei/3x-ui/v3/config"
-	"github.com/mhsanaei/3x-ui/v3/database"
 	"github.com/mhsanaei/3x-ui/v3/database/model"
 	"github.com/mhsanaei/3x-ui/v3/logger"
 	"github.com/mhsanaei/3x-ui/v3/util/common"
@@ -3533,13 +3532,10 @@ func (t *Tgbot) sendBackup(chatId int64) {
 	output := t.I18nBot("tgbot.messages.backupTime", "Time=="+time.Now().Format("2006-01-02 15:04:05"))
 	t.SendMsgToTgbot(chatId, output)
 
-	// Send database backup (SQLite file, or a pg_dump archive on PostgreSQL)
+	// Send database backup (SQLite file)
 	dbData, err := t.serverService.GetDb()
 	if err == nil {
 		dbFilename := "x-ui.db"
-		if database.IsPostgres() {
-			dbFilename = "x-ui.dump"
-		}
 		ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 		document := tu.Document(
 			tu.ID(chatId),

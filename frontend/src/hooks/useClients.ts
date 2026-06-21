@@ -134,6 +134,26 @@ async function fetchClientPage(params: ClientQueryParams): Promise<ClientPageRes
   return validated.obj;
 }
 
+const ALL_PAGES_SIZE = 200;
+
+// Loops the paged endpoint (capped at clientPageMaxSize server-side) to collect
+// every row matching the given search/filter/sort, ignoring page/pageSize.
+// Used by client-side-only filters (e.g. IP violation) that need to scan the
+// full result set rather than just whichever page the table is currently on.
+export async function fetchAllClientPages(
+  params: Omit<ClientQueryParams, 'page' | 'pageSize'>,
+): Promise<ClientRecord[]> {
+  let page = 1;
+  let all: ClientRecord[] = [];
+  for (;;) {
+    const resp = await fetchClientPage({ ...params, page, pageSize: ALL_PAGES_SIZE });
+    all = all.concat(resp.items);
+    if (resp.items.length === 0 || all.length >= resp.total) break;
+    page += 1;
+  }
+  return all;
+}
+
 async function fetchInboundOptions(): Promise<InboundOption[]> {
   const msg = await HttpUtil.get('/panel/api/inbounds/options', undefined, { silent: true });
   if (!msg?.success) throw new Error(msg?.msg || 'Failed to fetch inbound options');
@@ -182,7 +202,8 @@ export function useClients() {
   const listQuery = useQuery({
     queryKey: keys.clients.list(query),
     queryFn: () => fetchClientPage(query),
-    staleTime: Infinity,
+    staleTime: 30_000,
+    refetchInterval: 30_000,
     placeholderData: keepPreviousData,
   });
 
@@ -206,7 +227,8 @@ export function useClients() {
       const validated = parseMsg(msg, OnlinesSchema, 'clients/onlines');
       return Array.isArray(validated.obj) ? validated.obj : [];
     },
-    staleTime: Infinity,
+    staleTime: 8_000,
+    refetchInterval: 10_000,
   });
 
   const clients = listQuery.data?.items ?? [];
@@ -242,6 +264,7 @@ export function useClients() {
   const expireDiff = ((defaults.expireDiff as number) ?? 0) * 86400000;
   const trafficDiff = ((defaults.trafficDiff as number) ?? 0) * 1073741824;
   const pageSize = (defaults.pageSize as number) ?? 0;
+  const trafficMultiplier = ((defaults.trafficMultiplier as number) ?? 1) || 1;
 
   // Live summary: the client_stats WS event refreshes allClientStats every few
   // seconds, so the top counters track reality without a page refresh. Falls
@@ -382,6 +405,12 @@ export function useClients() {
     onSuccess: (msg) => { if (msg?.success) invalidateAll(); },
   });
 
+  const exemptFromMultiplierMut = useMutation({
+    mutationFn: ({ email, exempt }: { email: string; exempt: boolean }) =>
+      HttpUtil.post(`/panel/api/clients/exemptMultiplier/${encodeURIComponent(email)}`, { exempt }, JSON_HEADERS),
+    onSuccess: (msg) => { if (msg?.success) invalidateAll(); },
+  });
+
   const delDepletedMut = useMutation({
     mutationFn: async () => {
       const raw = await HttpUtil.post('/panel/api/clients/delDepleted');
@@ -443,6 +472,10 @@ export function useClients() {
   }, [resetTrafficMut]);
   const resetAllTraffics = useCallback(() => resetAllTrafficsMut.mutateAsync(), [resetAllTrafficsMut]);
   const delDepleted = useCallback(() => delDepletedMut.mutateAsync(), [delDepletedMut]);
+  const setExemptFromMultiplier = useCallback((client: ClientRecord, exempt: boolean) => {
+    if (!client?.email) return Promise.resolve(null as unknown as Msg<unknown>);
+    return exemptFromMultiplierMut.mutateAsync({ email: client.email, exempt });
+  }, [exemptFromMultiplierMut]);
 
   const setEnable = useCallback(async (client: ClientRecord, enable: boolean) => {
     if (!client?.email) return null;
@@ -541,6 +574,7 @@ export function useClients() {
     expireDiff,
     trafficDiff,
     pageSize,
+    trafficMultiplier,
     refresh,
     create,
     bulkCreate,
@@ -558,6 +592,7 @@ export function useClients() {
     resetAllTraffics,
     delDepleted,
     setEnable,
+    setExemptFromMultiplier,
     applyTrafficEvent,
     applyClientStatsEvent,
   };
