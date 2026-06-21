@@ -67,7 +67,20 @@
 
 </details>
 
-## شروع سریع
+## نصب 3X-UI Glass (فورک شخصی‌سازی‌شده)
+
+```bash
+wget https://github.com/alir3zai/3x-ui-glass/releases/download/v4.5.2/3x-ui-glass-amd64.tar.gz
+tar xzf 3x-ui-glass-amd64.tar.gz
+cd 3x-ui-glass
+bash install.sh
+```
+
+**اطلاعات ورود پیش‌فرض:** `admin` / `admin` — بلافاصله پس از نصب تغییر دهید!
+
+---
+
+## شروع سریع (نسخه اصلی)
 
 ```bash
 bash <(curl -Ls https://raw.githubusercontent.com/mhsanaei/3x-ui/master/install.sh)
@@ -171,6 +184,22 @@ English · فارسی · العربية · 中文（简体） · 中文（繁體
 <a href="https://nowpayments.io/donation/hsanaei" target="_blank" rel="noreferrer noopener">
    <img src="./media/donation-button-black.svg" alt="Crypto donation button by NOWPayments">
 </a>
+
+## تاریخچه تغییرات (3X-UI Glass)
+
+### v4.5.2
+- 🐛 **رفع باگ**: آمار ترافیک به‌ازای هر کاربر در پروتکل Hysteria/Hysteria2 اکنون به‌درستی ثبت می‌شود — شمارنده‌های `user>>>email>>>traffic>>>uplink/downlink` همیشه صفر نشان می‌دادند. علت ریشه‌ای: یک باگ در xray-core که `CounterConnection` متد `User()` را انتقال نمی‌داد. رفع شد با فراخوانی `TryUnwrapStatsConn` پیش از type assertion. باینری xray اصلاح‌شده در release assets موجود است.
+
+### v4.5.1
+- ✨ بهبود رابط کاربری glassmorphism در تمام تم‌ها
+- 🐛 رفع مشکل انتخاب کلاینت‌ها بین صفحات مختلف
+- 🐛 رفع مشکل fragment در لینک‌های خروجی
+
+### v4.5.0
+- 🔒 اعمال محدودیت IP از طریق جابجایی UUID
+- ⚠️ نمایش هشدار تخلف IP در پنل
+- 📋 خروجی انبوه لینک‌های اشتراک و vless
+- 🐉 منوی مدیریت سرور
 
 ## ستاره‌ها در طول زمان
 
